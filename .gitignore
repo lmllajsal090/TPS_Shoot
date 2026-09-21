@@ -1,0 +1,49 @@
+# Unreal Engine generated files and caches
+/Binaries/
+/DerivedDataCache/
+/Intermediate/
+/Saved/
+
+# Generated IDE project files
+/*.sln
+/*.xcodeproj
+/*.xcworkspace
+/.vs/
+/.idea/
+/.vscode/
+/*.code-workspace
+/*.sln.DotSettings.user
+
+# Visual Studio and Rider per-user files
+*.suo
+*.user
+*.userprefs
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# Generated data inside project plugins
+/Plugins/**/Binaries/
+/Plugins/**/DerivedDataCache/
+/Plugins/**/Intermediate/
+/Plugins/**/Saved/
+
+# User-specific Unreal content
+/Content/Developers/
+
+# Local packaged builds and release artifacts
+/StagedBuilds/
+/Releases/
+/Packaged/
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary and backup files
+*.tmp
+*.temp
+*.bak
+*~
