@@ -14,31 +14,13 @@ public class TPS_Shoot : ModuleRules
 			"Engine",
 			"InputCore",
 			"EnhancedInput",
-			"AIModule",
-			"StateTreeModule",
-			"GameplayStateTreeModule",
 			"UMG",
 			"Slate"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 
-		PublicIncludePaths.AddRange(new string[] {
-			"TPS_Shoot",
-			"TPS_Shoot/Variant_Platforming",
-			"TPS_Shoot/Variant_Platforming/Animation",
-			"TPS_Shoot/Variant_Combat",
-			"TPS_Shoot/Variant_Combat/AI",
-			"TPS_Shoot/Variant_Combat/Animation",
-			"TPS_Shoot/Variant_Combat/Gameplay",
-			"TPS_Shoot/Variant_Combat/Interfaces",
-			"TPS_Shoot/Variant_Combat/UI",
-			"TPS_Shoot/Variant_SideScrolling",
-			"TPS_Shoot/Variant_SideScrolling/AI",
-			"TPS_Shoot/Variant_SideScrolling/Gameplay",
-			"TPS_Shoot/Variant_SideScrolling/Interfaces",
-			"TPS_Shoot/Variant_SideScrolling/UI"
-		});
+		PublicIncludePaths.Add("TPS_Shoot");
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
