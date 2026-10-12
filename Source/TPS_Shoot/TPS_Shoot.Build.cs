@@ -18,7 +18,7 @@ public class TPS_Shoot : ModuleRules
 			"Slate"
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { });
+		PrivateDependencyModuleNames.AddRange(new string[] { "OpenSubdiv" });
 
 		PublicIncludePaths.Add("TPS_Shoot");
 

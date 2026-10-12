@@ -18,9 +18,9 @@ ATPS_ShootCharacter::ATPS_ShootCharacter()
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
 	// Don't rotate when the controller rotates. Let that just affect the camera.
-	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = false;
-	bUseControllerRotationRoll = false;
+	bUseControllerRotationPitch = false;//上抬下俯
+	bUseControllerRotationYaw = false;//左右转向
+	bUseControllerRotationRoll = false;//左右倾斜
 
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -65,6 +65,9 @@ void ATPS_ShootCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATPS_ShootCharacter::Look);
+		
+		// Fire
+		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ATPS_ShootCharacter::Fire);
 	}
 	else
 	{
@@ -88,6 +91,11 @@ void ATPS_ShootCharacter::Look(const FInputActionValue& Value)
 
 	// route the input
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
+}
+
+void ATPS_ShootCharacter::Fire(const FInputActionValue& Value)
+{
+	UE_LOG(LogTPS_Shoot, Warning, TEXT("Fire input received"));
 }
 
 void ATPS_ShootCharacter::DoMove(float Right, float Forward)
