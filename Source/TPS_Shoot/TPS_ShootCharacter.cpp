@@ -11,6 +11,10 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "TPS_Shoot.h"
+#include "TPSWeapon/WeaponBase.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/World.h"
+#include "CollisionQueryParams.h"
 
 ATPS_ShootCharacter::ATPS_ShootCharacter()
 {
@@ -67,7 +71,7 @@ void ATPS_ShootCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATPS_ShootCharacter::Look);
 		
 		// Fire
-		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ATPS_ShootCharacter::Fire);
+		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &ATPS_ShootCharacter::Fire);
 	}
 	else
 	{
@@ -95,7 +99,45 @@ void ATPS_ShootCharacter::Look(const FInputActionValue& Value)
 
 void ATPS_ShootCharacter::Fire(const FInputActionValue& Value)
 {
-	UE_LOG(LogTPS_Shoot, Warning, TEXT("Fire input received"));
+	if (!IsValid(EquippedWeapon))
+	{
+		return;
+	}
+	
+	const FVector AimPoint = GetAimPoint();
+	EquippedWeapon->Fire(AimPoint);
+}
+
+FVector ATPS_ShootCharacter::GetAimPoint() const
+{
+	const FVector Start = FollowCamera->GetComponentLocation();
+	FVector End=Start+FollowCamera->GetForwardVector()*EquippedWeapon->TraceDistance;
+	
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	Params.AddIgnoredActor(EquippedWeapon);
+	
+	FHitResult Hit;
+	bool bHit=GetWorld()->LineTraceSingleByChannel(
+		Hit,
+		Start,
+		End,
+		ECollisionChannel::ECC_Visibility,
+		Params
+		);
+	
+	DrawDebugLine(
+	GetWorld(),
+	Start,
+	bHit ? Hit.ImpactPoint : End,
+	FColor::Blue,
+	false,
+	1.0f,
+	0,
+	2.0f
+);
+	
+	return bHit ? Hit.ImpactPoint : End;
 }
 
 void ATPS_ShootCharacter::DoMove(float Right, float Forward)
@@ -138,4 +180,41 @@ void ATPS_ShootCharacter::DoJumpEnd()
 {
 	// signal the character to stop jumping
 	StopJumping();
+}
+
+void ATPS_ShootCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	
+	if (!DefaultWeaponClass)
+	{
+		UE_LOG(LogTPS_Shoot, Warning, TEXT("未设置默认武器类"));
+		return;
+	}
+
+	if (WeaponAttachSocketName.IsNone() ||
+		!GetMesh()->DoesSocketExist(WeaponAttachSocketName))
+	{
+		UE_LOG(LogTPS_Shoot, Warning, TEXT("持枪 Socket 不存在"));
+		return;
+	}
+	
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.Instigator = this;
+	
+	EquippedWeapon=GetWorld()->SpawnActor<AWeaponBase>(
+		DefaultWeaponClass,
+		GetActorTransform(), 
+		SpawnParams
+		);
+	
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->AttachToComponent(
+			GetMesh(),
+			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+			WeaponAttachSocketName);
+	}
 }

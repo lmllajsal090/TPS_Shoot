@@ -10,6 +10,7 @@
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
+class AWeaponBase;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -75,6 +76,8 @@ protected:
 	void Fire(const FInputActionValue& Value);
 public:
 
+	FVector GetAimPoint() const;
+	
 	/** Handles move inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoMove(float Right, float Forward);
@@ -91,6 +94,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
 
+	virtual void BeginPlay() override;
+	
+	// 蓝图里选择开局生成哪一种武器
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	TSubclassOf<AWeaponBase> DefaultWeaponClass;
+
+	// 游戏运行时实际生成的那一把武器
+	UPROPERTY(VisibleInstanceOnly, Category = "Weapon")
+	TObjectPtr<AWeaponBase> EquippedWeapon;
+
+	// 填你已经创建好的角色持枪 Socket 名称
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	FName WeaponAttachSocketName;
 public:
 
 	/** Returns CameraBoom subobject **/
