@@ -2,7 +2,8 @@
 
 
 #include "TPSWeapon/WeaponBase.h"
-
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/DamageType.h"
 #include "TPS_Shoot.h"
 
 // Sets default values
@@ -19,6 +20,10 @@ AWeaponBase::AWeaponBase()
 
 void AWeaponBase::Fire(const FVector& AimPoint)
 {
+	const double CurrentTime = GetWorld()->GetTimeSeconds();
+	
+	if (CurrentTime<NextAllowedFireTime)return;
+	if (CurrentAmmo<=0)return;
 	if (WeaponMuzzleSocketName.IsNone() ||
 	!WeaponMesh->DoesSocketExist(WeaponMuzzleSocketName))
 	{
@@ -50,12 +55,52 @@ void AWeaponBase::Fire(const FVector& AimPoint)
 		2.0f
 		);
 	
+	if (bHit&&IsValid(Hit.GetActor()))
+	{
+		const FVector ShootDirection = (AimPoint-MuzzleLocation).GetSafeNormal();
+		
+		UGameplayStatics::ApplyPointDamage(
+			Hit.GetActor(),
+			Damage,
+			ShootDirection,
+			Hit,
+			GetInstigatorController(),
+			this,
+			UDamageType::StaticClass()
+			);
+	}
+	
+	NextAllowedFireTime=CurrentTime+FireInterval;
+	CurrentAmmo--;
+	
+	UE_LOG(LogTPS_Shoot, Log,
+	TEXT("开火，剩余弹药：%d"), CurrentAmmo);
+}
+
+void AWeaponBase::StartReload()
+{
+	if (bIsReloading)return;
+	if (CurrentAmmo==MagazineCapacity)return;
+	if (ReserveAmmo<=0)return;
+	if (ReloadDuration<=0)return;
+	
+	bIsReloading=true;
+	UE_LOG(LogTPS_Shoot, Log, TEXT("开始换弹"));
+	
+	GetWorldTimerManager().SetTimer(
+	ReloadTimerHandle,
+	this,
+	&AWeaponBase::FinishReload,
+	ReloadDuration,
+	false
+);
 }
 
 // Called when the game starts or when spawned
 void AWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
+	CurrentAmmo = MagazineCapacity;
 	
 }
 

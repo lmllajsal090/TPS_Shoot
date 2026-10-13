@@ -126,17 +126,6 @@ FVector ATPS_ShootCharacter::GetAimPoint() const
 		Params
 		);
 	
-	DrawDebugLine(
-	GetWorld(),
-	Start,
-	bHit ? Hit.ImpactPoint : End,
-	FColor::Blue,
-	false,
-	1.0f,
-	0,
-	2.0f
-);
-	
 	return bHit ? Hit.ImpactPoint : End;
 }
 

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "TimerManager.h"
 #include "WeaponBase.generated.h"
 
 UCLASS()
@@ -22,6 +23,8 @@ public:
 	
 	UPROPERTY(VisibleAnywhere,Category = "Weapon")
 	FName WeaponMuzzleSocketName=FName("Muzzle");
+	
+	void StartReload();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -44,4 +47,23 @@ protected:
 
 	// 下一次允许射击的游戏时间
 	double NextAllowedFireTime = 0.0;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Damage",meta = (ClampMin = "0"))
+	float Damage = 25.0f;
+	
+	void FinishReload();
+
+	// 开局备用弹药，运行时逐步消耗
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Ammo",
+		meta = (ClampMin = "0"))
+	int32 ReserveAmmo = 90;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Reload",
+		meta = (ClampMin = "0.01"))
+	float ReloadDuration = 2.0f;
+
+	UPROPERTY(VisibleInstanceOnly, Category = "Weapon|Reload")
+	bool bIsReloading = false;
+
+	FTimerHandle ReloadTimerHandle;
 };
