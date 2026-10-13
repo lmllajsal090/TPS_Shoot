@@ -16,6 +16,8 @@
 #include "Engine/World.h"
 #include "CollisionQueryParams.h"
 
+
+
 ATPS_ShootCharacter::ATPS_ShootCharacter()
 {
 	// Set size for collision capsule
@@ -72,6 +74,9 @@ void ATPS_ShootCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		
 		// Fire
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &ATPS_ShootCharacter::Fire);
+		
+		// Reload
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &ATPS_ShootCharacter::Reload);
 	}
 	else
 	{
@@ -156,6 +161,14 @@ void ATPS_ShootCharacter::DoLook(float Yaw, float Pitch)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(Yaw);
 		AddControllerPitchInput(Pitch);
+	}
+}
+
+void ATPS_ShootCharacter::Reload(const FInputActionValue& Value)
+{
+	if (IsValid(EquippedWeapon))
+	{
+		EquippedWeapon->StartReload();
 	}
 }
 

@@ -7,6 +7,7 @@
 #include "TimerManager.h"
 #include "WeaponBase.generated.h"
 
+DECLARE_MULTICAST_DELEGATE(FOnWeaponStateChanged)
 UCLASS()
 class TPS_SHOOT_API AWeaponBase : public AActor
 {
@@ -25,6 +26,13 @@ public:
 	FName WeaponMuzzleSocketName=FName("Muzzle");
 	
 	void StartReload();
+	
+	int32 GetCurrentAmmo() const { return CurrentAmmo; }
+	int32 GetMagazineCapacity() const { return MagazineCapacity; }
+	int32 GetReserveAmmo() const { return ReserveAmmo; }
+	bool IsReloading() const { return bIsReloading; }
+	
+	FOnWeaponStateChanged OnWeaponStateChanged;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

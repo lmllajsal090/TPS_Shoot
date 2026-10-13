@@ -20,6 +20,11 @@ AWeaponBase::AWeaponBase()
 
 void AWeaponBase::Fire(const FVector& AimPoint)
 {
+	if (bIsReloading)
+	{
+		return;
+	}
+	
 	const double CurrentTime = GetWorld()->GetTimeSeconds();
 	
 	if (CurrentTime<NextAllowedFireTime)return;
@@ -73,6 +78,7 @@ void AWeaponBase::Fire(const FVector& AimPoint)
 	NextAllowedFireTime=CurrentTime+FireInterval;
 	CurrentAmmo--;
 	
+	OnWeaponStateChanged.Broadcast();
 	UE_LOG(LogTPS_Shoot, Log,
 	TEXT("开火，剩余弹药：%d"), CurrentAmmo);
 }
@@ -80,7 +86,7 @@ void AWeaponBase::Fire(const FVector& AimPoint)
 void AWeaponBase::StartReload()
 {
 	if (bIsReloading)return;
-	if (CurrentAmmo==MagazineCapacity)return;
+	if (CurrentAmmo>=MagazineCapacity)return;
 	if (ReserveAmmo<=0)return;
 	if (ReloadDuration<=0)return;
 	
@@ -93,7 +99,9 @@ void AWeaponBase::StartReload()
 	&AWeaponBase::FinishReload,
 	ReloadDuration,
 	false
-);
+	);
+	
+	OnWeaponStateChanged.Broadcast();
 }
 
 // Called when the game starts or when spawned
@@ -102,6 +110,25 @@ void AWeaponBase::BeginPlay()
 	Super::BeginPlay();
 	CurrentAmmo = MagazineCapacity;
 	
+}
+
+void AWeaponBase::FinishReload()
+{
+	if (!bIsReloading)
+	{
+		return;
+	}
+	const int32 MissingAmmo = MagazineCapacity - CurrentAmmo;
+	const int32 AmmoToLoad = FMath::Min(MissingAmmo, ReserveAmmo);
+	
+	CurrentAmmo+=AmmoToLoad;
+	ReserveAmmo-=AmmoToLoad;
+	
+	bIsReloading=false;
+	
+	OnWeaponStateChanged.Broadcast();
+	UE_LOG(LogTPS_Shoot, Log, TEXT("换弹完成"));
+	UE_LOG(LogTPS_Shoot, Log, TEXT("当前弹药：%d，备用弹药：%d"), CurrentAmmo, ReserveAmmo);
 }
 
 
