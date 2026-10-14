@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "TPS_ShootCharacter.generated.h"
 
+class UAmmoWidget;
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
@@ -57,6 +58,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> ReloadAction;
 
+	// 在角色蓝图中选择 WBP_Ammo
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UAmmoWidget> AmmoWidgetClass;
+
+	// 运行时创建的界面实例
+	UPROPERTY(Transient)
+	TObjectPtr<UAmmoWidget> AmmoWidget;
+	
 	void Reload(const FInputActionValue& Value);
 public:
 

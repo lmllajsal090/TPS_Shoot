@@ -15,6 +15,8 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/World.h"
 #include "CollisionQueryParams.h"
+#include "UI/AMmoWidget.h"
+#include "GameFramework/PlayerController.h"
 
 
 
@@ -188,7 +190,6 @@ void ATPS_ShootCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	
 	if (!DefaultWeaponClass)
 	{
 		UE_LOG(LogTPS_Shoot, Warning, TEXT("未设置默认武器类"));
@@ -218,5 +219,26 @@ void ATPS_ShootCharacter::BeginPlay()
 			GetMesh(),
 			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 			WeaponAttachSocketName);
+	}
+	
+	if (!IsValid(EquippedWeapon) || !AmmoWidgetClass)
+	{
+		return;
+	}
+
+	// 当前单机版本使用第一个本地玩家的 Controller
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+
+	if (!PC || !PC->IsLocalController())
+	{
+		return;
+	}
+	
+	AmmoWidget=CreateWidget<UAmmoWidget>(PC, AmmoWidgetClass);
+
+	if (AmmoWidget)
+	{
+		AmmoWidget->AddToViewport();
+		AmmoWidget->SetWeapon(EquippedWeapon);
 	}
 }

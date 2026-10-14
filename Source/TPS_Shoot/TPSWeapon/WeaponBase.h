@@ -7,6 +7,7 @@
 #include "TimerManager.h"
 #include "WeaponBase.generated.h"
 
+class UNiagaraComponent;
 DECLARE_MULTICAST_DELEGATE(FOnWeaponStateChanged)
 UCLASS()
 class TPS_SHOOT_API AWeaponBase : public AActor
@@ -33,6 +34,9 @@ public:
 	bool IsReloading() const { return bIsReloading; }
 	
 	FOnWeaponStateChanged OnWeaponStateChanged;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Effects")
+	TObjectPtr<UNiagaraComponent> MuzzleFlashComponent;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

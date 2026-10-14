@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/DamageType.h"
 #include "TPS_Shoot.h"
+#include "NiagaraComponent.h"
 
 // Sets default values
 AWeaponBase::AWeaponBase()
@@ -16,6 +17,11 @@ AWeaponBase::AWeaponBase()
 
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponMesh->SetSimulatePhysics(false);
+	
+	MuzzleFlashComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("MuzzleFlashComponent"));
+	MuzzleFlashComponent->SetupAttachment(WeaponMesh, WeaponMuzzleSocketName);
+	
+	MuzzleFlashComponent->SetAutoActivate(false);
 }
 
 void AWeaponBase::Fire(const FVector& AimPoint)
@@ -77,6 +83,7 @@ void AWeaponBase::Fire(const FVector& AimPoint)
 	
 	NextAllowedFireTime=CurrentTime+FireInterval;
 	CurrentAmmo--;
+	MuzzleFlashComponent->Activate(true);
 	
 	OnWeaponStateChanged.Broadcast();
 	UE_LOG(LogTPS_Shoot, Log,
