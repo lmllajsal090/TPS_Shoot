@@ -7,6 +7,7 @@
 #include "TimerManager.h"
 #include "WeaponBase.generated.h"
 
+class AAProjectileBase;
 class UNiagaraComponent;
 DECLARE_MULTICAST_DELEGATE(FOnWeaponStateChanged)
 UCLASS()
@@ -78,4 +79,7 @@ protected:
 	bool bIsReloading = false;
 
 	FTimerHandle ReloadTimerHandle;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Projectile")
+	TSubclassOf<AAProjectileBase> ProjectileClass;
 };

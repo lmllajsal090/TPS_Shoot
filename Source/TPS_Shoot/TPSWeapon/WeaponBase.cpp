@@ -6,6 +6,7 @@
 #include "GameFramework/DamageType.h"
 #include "TPS_Shoot.h"
 #include "NiagaraComponent.h"
+#include "Projectile/AProjectileBase.h"
 
 // Sets default values
 AWeaponBase::AWeaponBase()
@@ -55,30 +56,38 @@ void AWeaponBase::Fire(const FVector& AimPoint)
 		Params
 	);
 	
-	DrawDebugLine(
-		GetWorld(),
-		MuzzleLocation,
-		bHit?Hit.ImpactPoint:AimPoint,
-		FColor::Red,
-		false,
-		1.0f,
-		0,
-		2.0f
-		);
-	
-	if (bHit&&IsValid(Hit.GetActor()))
+	if (!ProjectileClass)
 	{
-		const FVector ShootDirection = (AimPoint-MuzzleLocation).GetSafeNormal();
-		
-		UGameplayStatics::ApplyPointDamage(
-			Hit.GetActor(),
-			Damage,
-			ShootDirection,
-			Hit,
-			GetInstigatorController(),
-			this,
-			UDamageType::StaticClass()
-			);
+		UE_LOG(LogTPS_Shoot, Warning, TEXT("未设置弹丸类"));
+		return;
+	}
+	
+	const FVector ShootDirection = (AimPoint-MuzzleLocation).GetSafeNormal();
+	
+	if (ShootDirection.IsNearlyZero())
+	{
+		return;
+	}
+	const FRotator SpawnRotation = ShootDirection.Rotation();
+	
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.Instigator = GetInstigator();
+	SpawnParams.SpawnCollisionHandlingOverride =
+		ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
+	
+	AAProjectileBase* Projectile =
+	GetWorld()->SpawnActor<AAProjectileBase>(
+		ProjectileClass,
+		MuzzleLocation,
+		SpawnRotation,
+		SpawnParams
+	);
+	
+	if (!IsValid(Projectile))
+	{
+		UE_LOG(LogTPS_Shoot, Warning, TEXT("子弹生成失败"));
+		return;
 	}
 	
 	NextAllowedFireTime=CurrentTime+FireInterval;
