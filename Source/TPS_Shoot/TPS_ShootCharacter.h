@@ -77,7 +77,6 @@ protected:
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-protected:
 
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -87,10 +86,52 @@ protected:
 
 	/*Callled for Fire*/
 	void Fire(const FInputActionValue& Value);
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> AimAction;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Camera|Aim")
+	bool bIsAiming = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera|Aim")
+	float AimArmLength = 280.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera|Aim")
+	float AimSpeed = 12.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Camera|Aim")
+	float AimFOV = 65.f;
+
+	// 缓存你实际配置的普通视角
+	float NormalArmLength = 0.f;
+	float NormalFOV = 0.f;
+
+	bool bCameraTransitioning = false;
+	
+	void StartAiming();
+	void StopAiming();
+
+	virtual void Tick(float DeltaSeconds) override;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Camera|Aim",
+	meta = (ClampMin = "0.01", ClampMax = "1.0"))
+	float AimLookMultiplier = 0.65f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Movement|Aim",
+		meta = (ClampMin = "0"))
+	float AimWalkSpeed = 270.f;
+
+	float NormalWalkSpeed = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> CrosshairWidgetClass;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UUserWidget> CrosshairWidget;
 public:
 
 	FVector GetAimPoint() const;
-	
+
 	/** Handles move inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoMove(float Right, float Forward);

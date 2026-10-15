@@ -17,6 +17,7 @@
 #include "CollisionQueryParams.h"
 #include "UI/AMmoWidget.h"
 #include "GameFramework/PlayerController.h"
+#include "Blueprint/UserWidget.h"
 
 
 
@@ -24,15 +25,14 @@ ATPS_ShootCharacter::ATPS_ShootCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-		
-	// Don't rotate when the controller rotates. Let that just affect the camera.
-	bUseControllerRotationPitch = false;//上抬下俯
-	bUseControllerRotationYaw = false;//左右转向
-	bUseControllerRotationRoll = false;//左右倾斜
 
-	// Configure character movement
-	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
+	bUseControllerRotationPitch = false;//上抬下俯
+	bUseControllerRotationRoll = false;//左右倾斜4
+	
+	bUseControllerRotationYaw = true;//左右转向
+	// 身体朝向由控制器决定
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = false;
 
 	// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
 	// instead of recompiling to adjust them
@@ -46,16 +46,22 @@ ATPS_ShootCharacter::ATPS_ShootCharacter()
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 400.0f;
 	CameraBoom->bUsePawnControlRotation = true;
 
+	// 配置肩部视角
+	CameraBoom->TargetArmLength = 400.f;
+	CameraBoom->SocketOffset = FVector(0.f, 2.f, 27.f);
+	CameraBoom->bEnableCameraLag = false;
+	
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
-
-	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
-	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+	
+	FollowCamera->bUsePawnControlRotation = false;
+	FollowCamera->FieldOfView = 85.f;
+	
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 void ATPS_ShootCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -79,6 +85,13 @@ void ATPS_ShootCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		
 		// Reload
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &ATPS_ShootCharacter::Reload);
+		
+		if (AimAction)
+		{
+			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &ATPS_ShootCharacter::StartAiming);
+			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ATPS_ShootCharacter::StopAiming);
+			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Canceled, this, &ATPS_ShootCharacter::StopAiming);
+		}
 	}
 	else
 	{
@@ -113,6 +126,64 @@ void ATPS_ShootCharacter::Fire(const FInputActionValue& Value)
 	
 	const FVector AimPoint = GetAimPoint();
 	EquippedWeapon->Fire(AimPoint);
+}
+
+void ATPS_ShootCharacter::StartAiming()
+{
+	bIsAiming = true;
+	bCameraTransitioning = true;
+	GetCharacterMovement()->MaxWalkSpeed = AimWalkSpeed;
+}
+
+void ATPS_ShootCharacter::StopAiming()
+{
+	bIsAiming = false;
+	bCameraTransitioning = true;
+	GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
+}
+
+void ATPS_ShootCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	
+	if (!bCameraTransitioning)
+	{
+		return;
+	}
+	
+	const float TargetArm =bIsAiming ? AimArmLength : NormalArmLength;
+
+	const float TargetFOV =bIsAiming ? AimFOV : NormalFOV;
+	
+	const bool bArmFinished = FMath::IsNearlyEqual(
+	CameraBoom->TargetArmLength, TargetArm, 0.1f);
+
+	const bool bFOVFinished = FMath::IsNearlyEqual(
+		FollowCamera->FieldOfView, TargetFOV, 0.01f);
+
+	if (bArmFinished && bFOVFinished)
+	{
+		CameraBoom->TargetArmLength = TargetArm;
+		FollowCamera->SetFieldOfView(TargetFOV);
+
+		bCameraTransitioning = false;
+	}else
+	{
+		CameraBoom->TargetArmLength = FMath::FInterpTo(
+			CameraBoom->TargetArmLength,
+			TargetArm,
+			DeltaSeconds,
+			AimSpeed
+		);
+
+		FollowCamera->SetFieldOfView(FMath::FInterpTo(
+			FollowCamera->FieldOfView,
+			TargetFOV,
+			DeltaSeconds,
+			AimSpeed
+		));
+	}
+	
 }
 
 FVector ATPS_ShootCharacter::GetAimPoint() const
@@ -158,11 +229,13 @@ void ATPS_ShootCharacter::DoMove(float Right, float Forward)
 
 void ATPS_ShootCharacter::DoLook(float Yaw, float Pitch)
 {
-	if (GetController() != nullptr)
+	if (GetController())
 	{
-		// add yaw and pitch input to controller
-		AddControllerYawInput(Yaw);
-		AddControllerPitchInput(Pitch);
+		const float Multiplier =
+			bIsAiming ? AimLookMultiplier : 1.f;
+
+		AddControllerYawInput(Yaw * Multiplier);
+		AddControllerPitchInput(Pitch * Multiplier);
 	}
 }
 
@@ -189,6 +262,11 @@ void ATPS_ShootCharacter::DoJumpEnd()
 void ATPS_ShootCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	NormalArmLength = CameraBoom->TargetArmLength;
+	NormalFOV = FollowCamera->FieldOfView;
+	NormalWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	
+	
 	
 	if (!DefaultWeaponClass)
 	{
@@ -241,4 +319,19 @@ void ATPS_ShootCharacter::BeginPlay()
 		AmmoWidget->AddToViewport();
 		AmmoWidget->SetWeapon(EquippedWeapon);
 	}
+	
+	if (CrosshairWidgetClass)
+    	{
+    		CrosshairWidget =
+    			CreateWidget<UUserWidget>(PC, CrosshairWidgetClass);
+    
+    		if (CrosshairWidget)
+    		{
+    			CrosshairWidget->SetVisibility(
+    				ESlateVisibility::HitTestInvisible);
+    
+    			CrosshairWidget->AddToViewport(10);
+    		}
+    	}
+
 }
