@@ -26,7 +26,7 @@ float ATPSTarget::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent
 	float Damage=Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	CurrentHealth -= Damage;
 	
-	if (CurrentHealth<0)
+	if (CurrentHealth<=0.f)
 	{
 		UE_LOG(LogTPS_Shoot,Warning,TEXT("Target Died"));
 		Destroy();

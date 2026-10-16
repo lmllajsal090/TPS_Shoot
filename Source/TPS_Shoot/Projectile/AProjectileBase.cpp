@@ -3,10 +3,12 @@
 
 #include "Projectile/AProjectileBase.h"
 
+#include "TPS_Shoot.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/Pawn.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AAProjectileBase::AAProjectileBase()
@@ -39,6 +41,45 @@ void AAProjectileBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	SphereCollision->OnComponentHit.AddDynamic(
+		this,
+		&AAProjectileBase::OnHit
+	);
+
+	if (GetOwner())
+	{
+		SphereCollision->IgnoreActorWhenMoving(GetOwner(), true);
+	}
+
+	if (GetInstigator())
+	{
+		SphereCollision->IgnoreActorWhenMoving(GetInstigator(), true);
+	}
 }
+
+void AAProjectileBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (!OtherActor||OtherActor==this||OtherActor==GetOwner()||OtherActor==GetInstigator())
+	{
+		return;
+	}
+
+	// 在请求伤害之前标记，避免重复处理。
+	bHasHit = true;
+
+	UGameplayStatics::ApplyPointDamage(
+		OtherActor,
+		ProjectileDamage,
+		GetActorForwardVector(),
+		Hit,
+		GetInstigatorController(),
+		this,
+		nullptr
+	);
+	Destroy();
+}
+
+
 
 

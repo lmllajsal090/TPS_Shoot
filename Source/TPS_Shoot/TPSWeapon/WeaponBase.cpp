@@ -48,14 +48,6 @@ void AWeaponBase::Fire(const FVector& AimPoint)
 	Params.AddIgnoredActor(this);
 	Params.AddIgnoredActor(GetOwner());
 	
-	bool bHit = GetWorld()->LineTraceSingleByChannel(
-		Hit,
-		MuzzleLocation,
-		AimPoint,
-		ECollisionChannel::ECC_Visibility,
-		Params
-	);
-	
 	if (!ProjectileClass)
 	{
 		UE_LOG(LogTPS_Shoot, Warning, TEXT("未设置弹丸类"));
@@ -73,11 +65,9 @@ void AWeaponBase::Fire(const FVector& AimPoint)
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 	SpawnParams.Instigator = GetInstigator();
-	SpawnParams.SpawnCollisionHandlingOverride =
-		ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
+	SpawnParams.SpawnCollisionHandlingOverride =ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
 	
-	AAProjectileBase* Projectile =
-	GetWorld()->SpawnActor<AAProjectileBase>(
+	AAProjectileBase* Projectile =GetWorld()->SpawnActor<AAProjectileBase>(
 		ProjectileClass,
 		MuzzleLocation,
 		SpawnRotation,
@@ -89,6 +79,8 @@ void AWeaponBase::Fire(const FVector& AimPoint)
 		UE_LOG(LogTPS_Shoot, Warning, TEXT("子弹生成失败"));
 		return;
 	}
+	
+		Projectile->SetDamage(Damage);
 	
 	NextAllowedFireTime=CurrentTime+FireInterval;
 	CurrentAmmo--;

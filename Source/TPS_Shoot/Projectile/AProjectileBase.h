@@ -18,6 +18,10 @@ public:
 	// Sets default values for this actor's properties
 	AAProjectileBase();
 
+	void SetDamage(float InDamage)
+	{
+		ProjectileDamage = FMath::Max(0.0f, InDamage);
+	}
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -31,4 +35,12 @@ protected:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<USphereComponent>SphereCollision;
 
+	UPROPERTY(VisibleInstanceOnly, Category = "Projectile|Damage")
+	float ProjectileDamage = 0.0f;
+
+	// 一颗子弹只处理一次有效命中。
+	bool bHasHit = false;
+	
+	UFUNCTION()
+	void OnHit( UPrimitiveComponent* HitComponent,AActor* OtherActor,UPrimitiveComponent* OtherComp,FVector NormalImpulse,const FHitResult& Hit);
 };
