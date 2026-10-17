@@ -50,7 +50,7 @@ ATPS_ShootCharacter::ATPS_ShootCharacter()
 
 	// 配置肩部视角
 	CameraBoom->TargetArmLength = 400.f;
-	CameraBoom->SocketOffset = FVector(0.f, 2.f, 27.f);
+	CameraBoom->SocketOffset = FVector(0.f, 20.f, 46.f);
 	CameraBoom->bEnableCameraLag = false;
 	
 	// Create a follow camera
