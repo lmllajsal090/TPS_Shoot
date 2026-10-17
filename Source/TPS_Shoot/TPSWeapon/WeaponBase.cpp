@@ -139,4 +139,9 @@ void AWeaponBase::FinishReload()
 	UE_LOG(LogTPS_Shoot, Log, TEXT("当前弹药：%d，备用弹药：%d"), CurrentAmmo, ReserveAmmo);
 }
 
+FTransform AWeaponBase::GetLeftHandGripTransform_Implementation() const
+{
+	return GetActorTransform();
+}
+
 

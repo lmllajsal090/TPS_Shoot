@@ -38,6 +38,11 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Effects")
 	TObjectPtr<UNiagaraComponent> MuzzleFlashComponent;
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Weapon|IK")
+	FTransform GetLeftHandGripTransform() const;
+
+	virtual FTransform GetLeftHandGripTransform_Implementation() const;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

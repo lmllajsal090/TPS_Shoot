@@ -155,7 +155,7 @@ public:
 	TSubclassOf<AWeaponBase> DefaultWeaponClass;
 
 	// 游戏运行时实际生成的那一把武器
-	UPROPERTY(VisibleInstanceOnly, Category = "Weapon")
+	UPROPERTY(VisibleInstanceOnly,BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<AWeaponBase> EquippedWeapon;
 
 	// 填你已经创建好的角色持枪 Socket 名称
