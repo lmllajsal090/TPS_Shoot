@@ -43,20 +43,23 @@ public:
 	FTransform GetLeftHandGripTransform() const;
 
 	virtual FTransform GetLeftHandGripTransform_Implementation() const;
+	
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<UStaticMeshComponent> WeaponMesh;
-
-
+	
+	UFUNCTION()
+	void OnRep_WeaponState();
 	// 弹匣容量：配置数据
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Ammo", meta = (ClampMin = "1"))
 	int32 MagazineCapacity = 30;
 
 	// 当前弹药：运行时状态
-	UPROPERTY(VisibleInstanceOnly, Category = "Weapon|Ammo")
+	UPROPERTY(ReplicatedUsing = OnRep_WeaponState,VisibleInstanceOnly, Category = "Weapon|Ammo")
 	int32 CurrentAmmo = 0;
 
 	// 两次射击之间的最小间隔，单位为秒
@@ -72,7 +75,7 @@ protected:
 	void FinishReload();
 
 	// 开局备用弹药，运行时逐步消耗
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Ammo",
+	UPROPERTY(ReplicatedUsing = OnRep_WeaponState,EditDefaultsOnly, Category = "Weapon|Ammo",
 		meta = (ClampMin = "0"))
 	int32 ReserveAmmo = 90;
 
@@ -80,11 +83,13 @@ protected:
 		meta = (ClampMin = "0.01"))
 	float ReloadDuration = 2.0f;
 
-	UPROPERTY(VisibleInstanceOnly, Category = "Weapon|Reload")
+	UPROPERTY(ReplicatedUsing = OnRep_WeaponState,VisibleInstanceOnly, Category = "Weapon|Reload")
 	bool bIsReloading = false;
 
 	FTimerHandle ReloadTimerHandle;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Projectile")
 	TSubclassOf<AAProjectileBase> ProjectileClass;
+	
+	
 };

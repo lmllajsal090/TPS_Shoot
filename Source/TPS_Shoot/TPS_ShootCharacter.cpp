@@ -17,6 +17,7 @@
 #include "CollisionQueryParams.h"
 #include "UI/AMmoWidget.h"
 #include "GameFramework/PlayerController.h"
+#include "Net/UnrealNetwork.h"
 #include "Blueprint/UserWidget.h"
 
 
@@ -62,6 +63,52 @@ ATPS_ShootCharacter::ATPS_ShootCharacter()
 	FollowCamera->FieldOfView = 85.f;
 	
 	PrimaryActorTick.bCanEverTick = true;
+}
+
+void ATPS_ShootCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	NormalArmLength = CameraBoom->TargetArmLength;
+	NormalFOV = FollowCamera->FieldOfView;
+	NormalWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	
+	if (HasAuthority())
+	{
+		InitializeDefaultWeapon();
+	}
+
+	if (IsLocallyControlled())
+	{
+		InitializeLocalUI();
+	}
+	
+	if (WeaponAttachSocketName.IsNone() ||
+     		!GetMesh()->DoesSocketExist(WeaponAttachSocketName))
+     	{
+     		UE_LOG(LogTPS_Shoot, Warning, TEXT("持枪 Socket 不存在"));
+     		return;
+     	}
+}
+
+void ATPS_ShootCharacter::OnRep_EquippedWeapon()
+{
+	UE_LOG(
+		LogTPS_Shoot,
+		Warning,
+		TEXT("[WeaponRep] Character=%s Weapon=%s Authority=%d"),
+		*GetName(),
+		*GetNameSafe(EquippedWeapon.Get()),
+		HasAuthority() ? 1 : 0
+	);
+	
+	TryBindAmmoWidget();
+}
+
+
+void ATPS_ShootCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ATPS_ShootCharacter, EquippedWeapon);
 }
 
 void ATPS_ShootCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -124,7 +171,27 @@ void ATPS_ShootCharacter::Fire(const FInputActionValue& Value)
 		return;
 	}
 	
-	const FVector AimPoint = GetAimPoint();
+	ServerFire(GetAimPoint());
+	
+}
+
+void ATPS_ShootCharacter::ServerFire_Implementation(
+	FVector_NetQuantize AimPoint)
+{
+	UE_LOG(
+		LogTPS_Shoot,
+		Warning,
+		TEXT("[FireRPC] Character=%s NetMode=%d Authority=%d"),
+		*GetName(),
+		static_cast<int32>(GetNetMode()),
+		HasAuthority() ? 1 : 0
+	);
+
+	if (!IsValid(EquippedWeapon) || AimPoint.ContainsNaN())
+	{
+		return;
+	}
+
 	EquippedWeapon->Fire(AimPoint);
 }
 
@@ -186,6 +253,14 @@ void ATPS_ShootCharacter::Tick(float DeltaSeconds)
 	
 }
 
+void ATPS_ShootCharacter::ServerReload_Implementation()
+{
+	if (IsValid(EquippedWeapon))
+	{
+		EquippedWeapon->StartReload();
+	}
+}
+
 FVector ATPS_ShootCharacter::GetAimPoint() const
 {
 	const FVector Start = FollowCamera->GetComponentLocation();
@@ -241,43 +316,17 @@ void ATPS_ShootCharacter::DoLook(float Yaw, float Pitch)
 
 void ATPS_ShootCharacter::Reload(const FInputActionValue& Value)
 {
-	if (IsValid(EquippedWeapon))
+	if (IsLocallyControlled() && IsValid(EquippedWeapon))
 	{
-		EquippedWeapon->StartReload();
+		ServerReload();
 	}
 }
 
-void ATPS_ShootCharacter::DoJumpStart()
+void ATPS_ShootCharacter::InitializeDefaultWeapon()
 {
-	// signal the character to jump
-	Jump();
-}
-
-void ATPS_ShootCharacter::DoJumpEnd()
-{
-	// signal the character to stop jumping
-	StopJumping();
-}
-
-void ATPS_ShootCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-	NormalArmLength = CameraBoom->TargetArmLength;
-	NormalFOV = FollowCamera->FieldOfView;
-	NormalWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
-	
-	
-	
 	if (!DefaultWeaponClass)
 	{
 		UE_LOG(LogTPS_Shoot, Warning, TEXT("未设置默认武器类"));
-		return;
-	}
-
-	if (WeaponAttachSocketName.IsNone() ||
-		!GetMesh()->DoesSocketExist(WeaponAttachSocketName))
-	{
-		UE_LOG(LogTPS_Shoot, Warning, TEXT("持枪 Socket 不存在"));
 		return;
 	}
 	
@@ -299,39 +348,68 @@ void ATPS_ShootCharacter::BeginPlay()
 			WeaponAttachSocketName);
 	}
 	
-	if (!IsValid(EquippedWeapon) || !AmmoWidgetClass)
+}
+
+void ATPS_ShootCharacter::InitializeLocalUI()
+{
+	if (!AmmoWidgetClass)
 	{
 		return;
 	}
-
-	// 当前单机版本使用第一个本地玩家的 Controller
-	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	
+	APlayerController* PC =Cast<APlayerController>(GetController());
 
 	if (!PC || !PC->IsLocalController())
 	{
 		return;
 	}
 	
-	AmmoWidget=CreateWidget<UAmmoWidget>(PC, AmmoWidgetClass);
+	AmmoWidget = CreateWidget<UAmmoWidget>(PC, AmmoWidgetClass);
 
 	if (AmmoWidget)
 	{
 		AmmoWidget->AddToViewport();
-		AmmoWidget->SetWeapon(EquippedWeapon);
+		TryBindAmmoWidget();
 	}
 	
 	if (CrosshairWidgetClass)
-    	{
-    		CrosshairWidget =
-    			CreateWidget<UUserWidget>(PC, CrosshairWidgetClass);
+	{
+		CrosshairWidget =
+			CreateWidget<UUserWidget>(PC, CrosshairWidgetClass);
     
-    		if (CrosshairWidget)
-    		{
-    			CrosshairWidget->SetVisibility(
-    				ESlateVisibility::HitTestInvisible);
+		if (CrosshairWidget)
+		{
+			CrosshairWidget->SetVisibility(
+				ESlateVisibility::HitTestInvisible);
     
-    			CrosshairWidget->AddToViewport(10);
-    		}
-    	}
+			CrosshairWidget->AddToViewport(10);
+		}
+	}
+}
 
+void ATPS_ShootCharacter::DoJumpStart()
+{
+	// signal the character to jump
+	Jump();
+}
+
+void ATPS_ShootCharacter::DoJumpEnd()
+{
+	// signal the character to stop jumping
+	StopJumping();
+}
+
+void ATPS_ShootCharacter::TryBindAmmoWidget()
+{
+	if (!IsLocallyControlled())
+	{
+		return;
+	}
+
+	if (!IsValid(AmmoWidget) || !IsValid(EquippedWeapon))
+	{
+		return;
+	}
+
+	AmmoWidget->SetWeapon(EquippedWeapon.Get());
 }

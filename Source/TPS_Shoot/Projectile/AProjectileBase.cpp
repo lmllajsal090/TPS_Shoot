@@ -13,6 +13,9 @@
 // Sets default values
 AAProjectileBase::AAProjectileBase()
 {
+	bReplicates = true;
+	SetReplicateMovement(true);
+	
 	InitialLifeSpan = 3.0f;
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
@@ -41,6 +44,17 @@ void AAProjectileBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (!HasAuthority())
+	{
+		ProjectileMovement->Deactivate();
+		ProjectileMovement->SetComponentTickEnabled(false);
+
+		SetActorEnableCollision(false);
+		SetLifeSpan(0.f);
+
+		return;
+	}
+	
 	SphereCollision->OnComponentHit.AddDynamic(
 		this,
 		&AAProjectileBase::OnHit
@@ -55,11 +69,24 @@ void AAProjectileBase::BeginPlay()
 	{
 		SphereCollision->IgnoreActorWhenMoving(GetInstigator(), true);
 	}
+	
+	UE_LOG(
+	LogTPS_Shoot,
+	Warning,
+	TEXT("[ProjectileRep] Projectile=%s Authority=%d"),
+	*GetName(),
+	HasAuthority() ? 1 : 0
+	);
 }
 
 void AAProjectileBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
+	if (!HasAuthority() || bHasHit)
+	{
+		return;
+	}
+	
 	if (!OtherActor||OtherActor==this||OtherActor==GetOwner()||OtherActor==GetInstigator())
 	{
 		return;

@@ -18,10 +18,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Target")
 	float MaxHealth = 100.0f;
 
-	UPROPERTY(VisibleInstanceOnly, Category = "Target")
+	UFUNCTION()
+	void OnRep_CurrentHealth();
+	
+	UPROPERTY(ReplicatedUsing=OnRep_CurrentHealth, VisibleInstanceOnly, Category = "Target")
 	float CurrentHealth = 0.0f;
 	
-	
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

@@ -6,11 +6,16 @@
 #include "GameFramework/DamageType.h"
 #include "TPS_Shoot.h"
 #include "NiagaraComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "Projectile/AProjectileBase.h"
 
 // Sets default values
 AWeaponBase::AWeaponBase()
 {
+	
+	bReplicates = true;
+	AActor::SetReplicateMovement(true);
+	
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 	WeaponMesh=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
@@ -27,7 +32,7 @@ AWeaponBase::AWeaponBase()
 
 void AWeaponBase::Fire(const FVector& AimPoint)
 {
-	if (bIsReloading)
+	if (bIsReloading||!HasAuthority())
 	{
 		return;
 	}
@@ -93,10 +98,7 @@ void AWeaponBase::Fire(const FVector& AimPoint)
 
 void AWeaponBase::StartReload()
 {
-	if (bIsReloading)return;
-	if (CurrentAmmo>=MagazineCapacity)return;
-	if (ReserveAmmo<=0)return;
-	if (ReloadDuration<=0)return;
+	if (!HasAuthority() || bIsReloading||CurrentAmmo>=MagazineCapacity||ReserveAmmo<=0||ReloadDuration<=0)return;
 	
 	bIsReloading=true;
 	UE_LOG(LogTPS_Shoot, Log, TEXT("开始换弹"));
@@ -116,13 +118,31 @@ void AWeaponBase::StartReload()
 void AWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
-	CurrentAmmo = MagazineCapacity;
+	if (HasAuthority())
+	{
+		CurrentAmmo = MagazineCapacity;
+	}
 	
+}
+
+void AWeaponBase::OnRep_WeaponState()
+{
+	UE_LOG(
+	   LogTPS_Shoot,
+	   Warning,
+	   TEXT("[WeaponState] Weapon=%s Ammo=%d Reserve=%d Reload=%d"),
+	   *GetName(),
+	   CurrentAmmo,
+	   ReserveAmmo,
+	   bIsReloading ? 1 : 0
+   );
+
+	OnWeaponStateChanged.Broadcast();
 }
 
 void AWeaponBase::FinishReload()
 {
-	if (!bIsReloading)
+	if (!bIsReloading||!HasAuthority())
 	{
 		return;
 	}
@@ -142,6 +162,15 @@ void AWeaponBase::FinishReload()
 FTransform AWeaponBase::GetLeftHandGripTransform_Implementation() const
 {
 	return GetActorTransform();
+}
+
+void AWeaponBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME(AWeaponBase, CurrentAmmo);
+	DOREPLIFETIME(AWeaponBase, ReserveAmmo);
+	DOREPLIFETIME(AWeaponBase, bIsReloading);
 }
 
 
