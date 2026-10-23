@@ -3,7 +3,6 @@
 
 #include "Projectile/AProjectileBase.h"
 
-#include "TPS_Shoot.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -70,13 +69,6 @@ void AAProjectileBase::BeginPlay()
 		SphereCollision->IgnoreActorWhenMoving(GetInstigator(), true);
 	}
 	
-	UE_LOG(
-	LogTPS_Shoot,
-	Warning,
-	TEXT("[ProjectileRep] Projectile=%s Authority=%d"),
-	*GetName(),
-	HasAuthority() ? 1 : 0
-	);
 }
 
 void AAProjectileBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,

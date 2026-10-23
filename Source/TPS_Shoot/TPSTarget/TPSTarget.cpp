@@ -3,7 +3,6 @@
 
 #include "TPSTarget/TPSTarget.h"
 
-#include "TPS_Shoot.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
@@ -13,18 +12,6 @@ ATPSTarget::ATPSTarget()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-}
-
-void ATPSTarget::OnRep_CurrentHealth()
-{
-	UE_LOG(
-		LogTPS_Shoot,
-		Warning,
-		TEXT("[HealthRep] Target=%s Health=%.1f Authority=%d"),
-		*GetName(),
-		CurrentHealth,
-		HasAuthority() ? 1 : 0
-	);
 }
 
 void ATPSTarget::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -57,12 +44,10 @@ float ATPSTarget::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent
 	
 	if (CurrentHealth<=0.f)
 	{
-		UE_LOG(LogTPS_Shoot,Warning,TEXT("Target Died"));
 		Destroy();
 		return Damage;
 	}
 	
-	UE_LOG(LogTPS_Shoot,Warning,TEXT("Target Took %f Health"),CurrentHealth);
 	return Damage;
 }
 

@@ -38,6 +38,9 @@ void UAmmoWidget::RefreshDisplay()
 {
 	if (!IsValid(ObservedWeapon))
 	{
+		AmmoText->SetText(FText::FromString(TEXT("0 / 0")));
+		ReserveText->SetText(FText::FromString(TEXT("备用：0")));
+		ReloadText->SetVisibility(ESlateVisibility::Collapsed);
 		return;
 	}
 	

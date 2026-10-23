@@ -49,6 +49,9 @@ public:
 	virtual void DoJumpEnd();
 
 	virtual void BeginPlay() override;
+	virtual void NotifyControllerChanged() override;
+	virtual void PawnClientRestart() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
 	// 蓝图里选择开局生成哪一种武器
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
@@ -120,6 +123,7 @@ protected:
 	void InitializeLocalUI();
 	
 	void TryBindAmmoWidget();
+	void RemoveLocalUI();
 	
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -140,7 +144,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> AimAction;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Camera|Aim")
+	UPROPERTY(ReplicatedUsing = OnRep_IsAiming, VisibleInstanceOnly, BlueprintReadOnly, Category = "Camera|Aim")
 	bool bIsAiming = false;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Camera|Aim")
@@ -160,6 +164,16 @@ protected:
 	
 	void StartAiming();
 	void StopAiming();
+	void SetAiming(bool bNewAiming);
+	void ApplyAimingState();
+
+	UFUNCTION(Server, Reliable)
+	void ServerSetAiming(bool bNewAiming);
+
+	UFUNCTION()
+	void OnRep_IsAiming();
+
+	bool bAimSettingsInitialized = false;
 
 	virtual void Tick(float DeltaSeconds) override;
 	

@@ -89,11 +89,9 @@ void AWeaponBase::Fire(const FVector& AimPoint)
 	
 	NextAllowedFireTime=CurrentTime+FireInterval;
 	CurrentAmmo--;
-	MuzzleFlashComponent->Activate(true);
+	MulticastPlayFireEffects();
 	
 	OnWeaponStateChanged.Broadcast();
-	UE_LOG(LogTPS_Shoot, Log,
-	TEXT("开火，剩余弹药：%d"), CurrentAmmo);
 }
 
 void AWeaponBase::StartReload()
@@ -101,7 +99,6 @@ void AWeaponBase::StartReload()
 	if (!HasAuthority() || bIsReloading||CurrentAmmo>=MagazineCapacity||ReserveAmmo<=0||ReloadDuration<=0)return;
 	
 	bIsReloading=true;
-	UE_LOG(LogTPS_Shoot, Log, TEXT("开始换弹"));
 	
 	GetWorldTimerManager().SetTimer(
 	ReloadTimerHandle,
@@ -127,17 +124,22 @@ void AWeaponBase::BeginPlay()
 
 void AWeaponBase::OnRep_WeaponState()
 {
-	UE_LOG(
-	   LogTPS_Shoot,
-	   Warning,
-	   TEXT("[WeaponState] Weapon=%s Ammo=%d Reserve=%d Reload=%d"),
-	   *GetName(),
-	   CurrentAmmo,
-	   ReserveAmmo,
-	   bIsReloading ? 1 : 0
-   );
 
 	OnWeaponStateChanged.Broadcast();
+}
+
+void AWeaponBase::MulticastPlayFireEffects_Implementation()
+{
+	if (GetNetMode() != NM_DedicatedServer && IsValid(MuzzleFlashComponent))
+	{
+		MuzzleFlashComponent->Activate(true);
+	}
+}
+
+void AWeaponBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorldTimerManager().ClearTimer(ReloadTimerHandle);
+	Super::EndPlay(EndPlayReason);
 }
 
 void AWeaponBase::FinishReload()
@@ -155,8 +157,6 @@ void AWeaponBase::FinishReload()
 	bIsReloading=false;
 	
 	OnWeaponStateChanged.Broadcast();
-	UE_LOG(LogTPS_Shoot, Log, TEXT("换弹完成"));
-	UE_LOG(LogTPS_Shoot, Log, TEXT("当前弹药：%d，备用弹药：%d"), CurrentAmmo, ReserveAmmo);
 }
 
 FTransform AWeaponBase::GetLeftHandGripTransform_Implementation() const

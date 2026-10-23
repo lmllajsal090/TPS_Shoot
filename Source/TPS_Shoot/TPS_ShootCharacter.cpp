@@ -71,9 +71,14 @@ void ATPS_ShootCharacter::BeginPlay()
 	NormalArmLength = CameraBoom->TargetArmLength;
 	NormalFOV = FollowCamera->FieldOfView;
 	NormalWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	bAimSettingsInitialized = true;
+	ApplyAimingState();
 	
 	if (HasAuthority())
 	{
+		// Server-side muzzle transforms must stay current even when off screen.
+		GetMesh()->VisibilityBasedAnimTickOption =
+			EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 		InitializeDefaultWeapon();
 	}
 
@@ -92,14 +97,6 @@ void ATPS_ShootCharacter::BeginPlay()
 
 void ATPS_ShootCharacter::OnRep_EquippedWeapon()
 {
-	UE_LOG(
-		LogTPS_Shoot,
-		Warning,
-		TEXT("[WeaponRep] Character=%s Weapon=%s Authority=%d"),
-		*GetName(),
-		*GetNameSafe(EquippedWeapon.Get()),
-		HasAuthority() ? 1 : 0
-	);
 	
 	TryBindAmmoWidget();
 }
@@ -109,6 +106,7 @@ void ATPS_ShootCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ATPS_ShootCharacter, EquippedWeapon);
+	DOREPLIFETIME(ATPS_ShootCharacter, bIsAiming);
 }
 
 void ATPS_ShootCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -166,7 +164,7 @@ void ATPS_ShootCharacter::Look(const FInputActionValue& Value)
 
 void ATPS_ShootCharacter::Fire(const FInputActionValue& Value)
 {
-	if (!IsValid(EquippedWeapon))
+	if (!IsLocallyControlled() || !IsValid(EquippedWeapon))
 	{
 		return;
 	}
@@ -178,14 +176,6 @@ void ATPS_ShootCharacter::Fire(const FInputActionValue& Value)
 void ATPS_ShootCharacter::ServerFire_Implementation(
 	FVector_NetQuantize AimPoint)
 {
-	UE_LOG(
-		LogTPS_Shoot,
-		Warning,
-		TEXT("[FireRPC] Character=%s NetMode=%d Authority=%d"),
-		*GetName(),
-		static_cast<int32>(GetNetMode()),
-		HasAuthority() ? 1 : 0
-	);
 
 	if (!IsValid(EquippedWeapon) || AimPoint.ContainsNaN())
 	{
@@ -197,23 +187,60 @@ void ATPS_ShootCharacter::ServerFire_Implementation(
 
 void ATPS_ShootCharacter::StartAiming()
 {
-	bIsAiming = true;
-	bCameraTransitioning = true;
-	GetCharacterMovement()->MaxWalkSpeed = AimWalkSpeed;
+	SetAiming(true);
 }
 
 void ATPS_ShootCharacter::StopAiming()
 {
-	bIsAiming = false;
-	bCameraTransitioning = true;
-	GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
+	SetAiming(false);
+}
+
+void ATPS_ShootCharacter::SetAiming(bool bNewAiming)
+{
+	if (!IsLocallyControlled())
+	{
+		return;
+	}
+
+	// Apply locally for responsive input; the server owns the replicated state.
+	bIsAiming = bNewAiming;
+	ApplyAimingState();
+	if (!HasAuthority())
+	{
+		ServerSetAiming(bNewAiming);
+	}
+}
+
+void ATPS_ShootCharacter::ServerSetAiming_Implementation(bool bNewAiming)
+{
+	bIsAiming = bNewAiming;
+	ApplyAimingState();
+}
+
+void ATPS_ShootCharacter::OnRep_IsAiming()
+{
+	ApplyAimingState();
+}
+
+void ATPS_ShootCharacter::ApplyAimingState()
+{
+	if (!bAimSettingsInitialized)
+	{
+		return;
+	}
+
+	GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : NormalWalkSpeed;
+	if (IsLocallyControlled())
+	{
+		bCameraTransitioning = true;
+	}
 }
 
 void ATPS_ShootCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	
-	if (!bCameraTransitioning)
+	if (!IsLocallyControlled() || !bCameraTransitioning)
 	{
 		return;
 	}
@@ -263,6 +290,11 @@ void ATPS_ShootCharacter::ServerReload_Implementation()
 
 FVector ATPS_ShootCharacter::GetAimPoint() const
 {
+	if (!IsValid(EquippedWeapon))
+	{
+		return GetPawnViewLocation();
+	}
+
 	const FVector Start = FollowCamera->GetComponentLocation();
 	FVector End=Start+FollowCamera->GetForwardVector()*EquippedWeapon->TraceDistance;
 	
@@ -352,11 +384,6 @@ void ATPS_ShootCharacter::InitializeDefaultWeapon()
 
 void ATPS_ShootCharacter::InitializeLocalUI()
 {
-	if (!AmmoWidgetClass)
-	{
-		return;
-	}
-	
 	APlayerController* PC =Cast<APlayerController>(GetController());
 
 	if (!PC || !PC->IsLocalController())
@@ -364,15 +391,20 @@ void ATPS_ShootCharacter::InitializeLocalUI()
 		return;
 	}
 	
-	AmmoWidget = CreateWidget<UAmmoWidget>(PC, AmmoWidgetClass);
-
-	if (AmmoWidget)
+	if (!IsValid(AmmoWidget) && AmmoWidgetClass)
 	{
-		AmmoWidget->AddToViewport();
+		AmmoWidget = CreateWidget<UAmmoWidget>(PC, AmmoWidgetClass);
+	}
+	if (IsValid(AmmoWidget))
+	{
+		if (!AmmoWidget->IsInViewport())
+		{
+			AmmoWidget->AddToViewport();
+		}
 		TryBindAmmoWidget();
 	}
 	
-	if (CrosshairWidgetClass)
+	if (!IsValid(CrosshairWidget) && CrosshairWidgetClass)
 	{
 		CrosshairWidget =
 			CreateWidget<UUserWidget>(PC, CrosshairWidgetClass);
@@ -406,10 +438,60 @@ void ATPS_ShootCharacter::TryBindAmmoWidget()
 		return;
 	}
 
-	if (!IsValid(AmmoWidget) || !IsValid(EquippedWeapon))
+	if (!IsValid(AmmoWidget))
 	{
 		return;
 	}
 
 	AmmoWidget->SetWeapon(EquippedWeapon.Get());
+}
+
+void ATPS_ShootCharacter::NotifyControllerChanged()
+{
+	Super::NotifyControllerChanged();
+	if (HasActorBegunPlay())
+	{
+		if (IsLocallyControlled())
+		{
+			InitializeLocalUI();
+		}
+		else
+		{
+			RemoveLocalUI();
+		}
+	}
+}
+
+void ATPS_ShootCharacter::PawnClientRestart()
+{
+	Super::PawnClientRestart();
+	if (HasActorBegunPlay() && IsLocallyControlled())
+	{
+		InitializeLocalUI();
+	}
+}
+
+void ATPS_ShootCharacter::RemoveLocalUI()
+{
+	if (IsValid(AmmoWidget))
+	{
+		AmmoWidget->SetWeapon(nullptr);
+		AmmoWidget->RemoveFromParent();
+		AmmoWidget = nullptr;
+	}
+	if (IsValid(CrosshairWidget))
+	{
+		CrosshairWidget->RemoveFromParent();
+		CrosshairWidget = nullptr;
+	}
+}
+
+void ATPS_ShootCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	RemoveLocalUI();
+	if (HasAuthority() && IsValid(EquippedWeapon))
+	{
+		EquippedWeapon->Destroy();
+	}
+	Super::EndPlay(EndPlayReason);
 }
