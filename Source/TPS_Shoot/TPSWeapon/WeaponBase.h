@@ -32,6 +32,8 @@ public:
 	int32 GetCurrentAmmo() const { return CurrentAmmo; }
 	int32 GetMagazineCapacity() const { return MagazineCapacity; }
 	int32 GetReserveAmmo() const { return ReserveAmmo; }
+	
+	UFUNCTION(BlueprintPure, Category = "Weapon|Reload")
 	bool IsReloading() const { return bIsReloading; }
 	
 	FOnWeaponStateChanged OnWeaponStateChanged;
