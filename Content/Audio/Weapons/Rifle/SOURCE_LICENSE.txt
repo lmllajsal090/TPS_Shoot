@@ -1,0 +1,16 @@
+# Rifle audio source recordings
+
+Status: original recordings imported for audition only. No processing, playback hookup, code, Blueprint, or Niagara changes.
+
+Library: The Free Firearm Sound Library (Prepared SFX Library)
+Creators: Ben Jaszczak, Brian Nelson, Kevin Heras, Matthew Nanney
+Source page: https://opengameart.org/content/the-free-firearm-sound-library
+Download: https://opengameart.org/sites/default/files/Prepared%20SFX%20Library.7z
+License: CC0 1.0 Universal
+License link: https://creativecommons.org/publicdomain/zero/1.0/
+Retrieved: 2026-10-25
+
+S_AK47_Single_Near_Raw: C_28P.wav; AK-47 single shot, near distance, stereo.
+S_AK47_Single_Mid_Raw: C_31P.wav; AK-47 single shot, mid distance, stereo, last round.
+Original recordings: 96 kHz, 24-bit, stereo. These are untrimmed source recordings, not final game-ready one-shots.
+Original WAV files and archive retained in F:/笔记/计划9.6/TPS开火音效优化_2026-10-25/sources/ for reimport.

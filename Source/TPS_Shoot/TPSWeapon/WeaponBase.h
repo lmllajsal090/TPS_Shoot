@@ -19,35 +19,37 @@ public:
 	// Sets default values for this actor's properties
 	AWeaponBase();
 	
-	UPROPERTY(EditAnywhere,  Category = "Weapon|Ammo")
-	float TraceDistance=1000.f;
-
+	FOnWeaponStateChanged OnWeaponStateChanged;
+	
 	void Fire(const FVector& AimPoint);
-	
-	UPROPERTY(VisibleAnywhere,Category = "Weapon")
-	FName WeaponMuzzleSocketName=FName("Muzzle");
-	
 	void StartReload();
+	
+	UFUNCTION(BlueprintPure, Category = "Weapon|Reload")
+	bool IsReloading() const { return bIsReloading; }
 	
 	int32 GetCurrentAmmo() const { return CurrentAmmo; }
 	int32 GetMagazineCapacity() const { return MagazineCapacity; }
 	int32 GetReserveAmmo() const { return ReserveAmmo; }
 	
-	UFUNCTION(BlueprintPure, Category = "Weapon|Reload")
-	bool IsReloading() const { return bIsReloading; }
-	
-	FOnWeaponStateChanged OnWeaponStateChanged;
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Effects")
-	TObjectPtr<UNiagaraComponent> MuzzleFlashComponent;
-	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Weapon|IK")
 	FTransform GetLeftHandGripTransform() const;
 
+	UFUNCTION(BlueprintPure, Category = "Weapon|Ammo")
+	float GetTraceDistance() const { return TraceDistance; }
+	
 	virtual FTransform GetLeftHandGripTransform_Implementation() const;
 	
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 protected:
+	UPROPERTY(EditAnywhere,  Category = "Weapon|Ammo")
+	float TraceDistance=1000.f;
+
+	UPROPERTY(VisibleAnywhere,Category = "Weapon")
+	FName WeaponMuzzleSocketName=FName("Muzzle");
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Effects")
+	TObjectPtr<UNiagaraComponent> MuzzleFlashComponent;
+	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -81,12 +83,10 @@ protected:
 	void FinishReload();
 
 	// 开局备用弹药，运行时逐步消耗
-	UPROPERTY(ReplicatedUsing = OnRep_WeaponState,EditDefaultsOnly, Category = "Weapon|Ammo",
-		meta = (ClampMin = "0"))
+	UPROPERTY(ReplicatedUsing = OnRep_WeaponState,EditDefaultsOnly, Category = "Weapon|Ammo",meta = (ClampMin = "0"))
 	int32 ReserveAmmo = 90;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Reload",
-		meta = (ClampMin = "0.01"))
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Reload",meta = (ClampMin = "0.01"))
 	float ReloadDuration = 2.0f;
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponState,VisibleInstanceOnly, Category = "Weapon|Reload")

@@ -19,17 +19,17 @@
 #include "GameFramework/PlayerController.h"
 #include "Net/UnrealNetwork.h"
 #include "Blueprint/UserWidget.h"
-
+#include "Combat/CombatComponent.h"
 
 
 ATPS_ShootCharacter::ATPS_ShootCharacter()
 {
+	PrimaryActorTick.bCanEverTick = true;
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
 	bUseControllerRotationPitch = false;//上抬下俯
-	bUseControllerRotationRoll = false;//左右倾斜4
-	
+	bUseControllerRotationRoll = false;//左右倾斜
 	bUseControllerRotationYaw = true;//左右转向
 	// 身体朝向由控制器决定
 	GetCharacterMovement()->bOrientRotationToMovement = false;
@@ -62,7 +62,8 @@ ATPS_ShootCharacter::ATPS_ShootCharacter()
 	FollowCamera->bUsePawnControlRotation = false;
 	FollowCamera->FieldOfView = 85.f;
 	
-	PrimaryActorTick.bCanEverTick = true;
+	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	
 }
 
 void ATPS_ShootCharacter::BeginPlay()
@@ -77,8 +78,7 @@ void ATPS_ShootCharacter::BeginPlay()
 	if (HasAuthority())
 	{
 		// Server-side muzzle transforms must stay current even when off screen.
-		GetMesh()->VisibilityBasedAnimTickOption =
-			EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+		GetMesh()->VisibilityBasedAnimTickOption =EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 		InitializeDefaultWeapon();
 	}
 
@@ -296,7 +296,7 @@ FVector ATPS_ShootCharacter::GetAimPoint() const
 	}
 
 	const FVector Start = FollowCamera->GetComponentLocation();
-	FVector End=Start+FollowCamera->GetForwardVector()*EquippedWeapon->TraceDistance;
+	FVector End=Start+FollowCamera->GetForwardVector()*EquippedWeapon->GetTraceDistance();
 	
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);

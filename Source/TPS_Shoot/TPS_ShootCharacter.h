@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "TPS_ShootCharacter.generated.h"
 
+class UCombatComponent;
 class UAmmoWidget;
 class USpringArmComponent;
 class UCameraComponent;
@@ -31,20 +32,16 @@ public:
 	ATPS_ShootCharacter();	
 
 	FVector GetAimPoint() const;
-
-	/** Handles move inputs from either controls or UI interfaces */
+	
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoMove(float Right, float Forward);
-
-	/** Handles look inputs from either controls or UI interfaces */
+	
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoLook(float Yaw, float Pitch);
 
-	/** Handles jump pressed inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpStart();
 
-	/** Handles jump pressed inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
 
@@ -61,6 +58,9 @@ public:
 	UPROPERTY(ReplicatedUsing=OnRep_EquippedWeapon,VisibleInstanceOnly,BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<AWeaponBase> EquippedWeapon;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	TObjectPtr<UCombatComponent> CombatComponent;
+	
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
 	
