@@ -30,6 +30,7 @@ public:
 	int32 GetCurrentAmmo() const { return CurrentAmmo; }
 	int32 GetMagazineCapacity() const { return MagazineCapacity; }
 	int32 GetReserveAmmo() const { return ReserveAmmo; }
+	FName GetHandSocketName() const { return HandSocketName; }
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Weapon|IK")
 	FTransform GetLeftHandGripTransform() const;
@@ -40,7 +41,12 @@ public:
 	virtual FTransform GetLeftHandGripTransform_Implementation() const;
 	
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
 protected:
+	// 该武器装备在角色手上时使用的 Socket
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Attachment")
+	FName HandSocketName = FName("WeaponSocket");
+	
 	UPROPERTY(EditAnywhere,  Category = "Weapon|Ammo")
 	float TraceDistance=1000.f;
 

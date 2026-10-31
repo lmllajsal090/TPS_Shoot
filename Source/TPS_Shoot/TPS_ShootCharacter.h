@@ -64,10 +64,6 @@ public:
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
 	
-	// 填你已经创建好的角色持枪 Socket 名称
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	FName WeaponAttachSocketName;
-	
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
@@ -76,6 +72,8 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(
 	TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
+	void SetEquippedWeapon(AWeaponBase* NewWeapon);
 protected:
 
 	/** Camera boom positioning the camera behind the character */

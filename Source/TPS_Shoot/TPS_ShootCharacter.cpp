@@ -87,12 +87,16 @@ void ATPS_ShootCharacter::BeginPlay()
 		InitializeLocalUI();
 	}
 	
-	if (WeaponAttachSocketName.IsNone() ||
-     		!GetMesh()->DoesSocketExist(WeaponAttachSocketName))
-     	{
-     		UE_LOG(LogTPS_Shoot, Warning, TEXT("持枪 Socket 不存在"));
-     		return;
-     	}
+	if (HasAuthority() && IsValid(EquippedWeapon))
+	{
+		const FName SocketName = EquippedWeapon->GetHandSocketName();
+
+		if (SocketName.IsNone() || !GetMesh()->DoesSocketExist(SocketName))
+		{
+			UE_LOG(LogTPS_Shoot, Warning, TEXT("当前武器的持枪 Socket 不存在：%s"),
+				*SocketName.ToString());
+		}
+	}
 }
 
 void ATPS_ShootCharacter::OnRep_EquippedWeapon()
@@ -380,10 +384,10 @@ void ATPS_ShootCharacter::InitializeDefaultWeapon()
 	if (EquippedWeapon)
 	{
 		EquippedWeapon->AttachToComponent(
-			GetMesh(),
-			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-			WeaponAttachSocketName
-			);
+		GetMesh(),
+		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+		EquippedWeapon->GetHandSocketName()
+		);
 		
 		if (IsValid(CombatComponent))
 		{
@@ -403,8 +407,8 @@ void ATPS_ShootCharacter::InitializeDefaultWeapon()
 					SecondaryWeapon->AttachToComponent(
 						GetMesh(),
 						FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-						WeaponAttachSocketName
-					);
+						SecondaryWeapon->GetHandSocketName()
+						);
 
 					SecondaryWeapon->SetActorHiddenInGame(true);
 
@@ -524,4 +528,17 @@ void ATPS_ShootCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	RemoveLocalUI();
 	Super::EndPlay(EndPlayReason);
+}
+
+void ATPS_ShootCharacter::SetEquippedWeapon(AWeaponBase* NewWeapon)
+{
+	if (!HasAuthority() || !IsValid(NewWeapon))
+	{
+		return;
+	}
+
+	EquippedWeapon = NewWeapon;
+
+	// 监听服务器主机的本地 UI 需要主动刷新。
+	TryBindAmmoWidget();
 }

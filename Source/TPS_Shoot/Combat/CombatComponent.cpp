@@ -116,10 +116,19 @@ void UCombatComponent::SwitchWeapon(int32 SlotIndex)
 		return;
 	}
 	
-	if (IsValid(Character->EquippedWeapon) &&
-	Character->EquippedWeapon->IsReloading())
+	if (IsValid(Character->EquippedWeapon) &&Character->EquippedWeapon->IsReloading())
 	{
 		return;
 	}
+	
+	// 隐藏当前武器。
+	if (IsValid(Character->EquippedWeapon))
+	{
+		Character->EquippedWeapon->SetActorHiddenInGame(true);
+	}
+
+	// 显示目标武器，并更新角色当前装备。
+	NewWeapon->SetActorHiddenInGame(false);
+	Character->SetEquippedWeapon(NewWeapon);
 }
 
