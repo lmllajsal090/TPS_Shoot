@@ -182,7 +182,12 @@ void ATPS_ShootCharacter::ServerFire_Implementation(
 		return;
 	}
 
-	EquippedWeapon->Fire(AimPoint);
+	if (!IsValid(EquippedWeapon) ||!IsValid(CombatComponent) ||AimPoint.ContainsNaN())
+	{
+		return;
+	}
+	
+	CombatComponent->Fire(AimPoint);
 }
 
 void ATPS_ShootCharacter::StartAiming()
@@ -282,9 +287,9 @@ void ATPS_ShootCharacter::Tick(float DeltaSeconds)
 
 void ATPS_ShootCharacter::ServerReload_Implementation()
 {
-	if (IsValid(EquippedWeapon))
+	if (IsValid(CombatComponent))
 	{
-		EquippedWeapon->StartReload();
+		CombatComponent->Reload();
 	}
 }
 
@@ -377,9 +382,38 @@ void ATPS_ShootCharacter::InitializeDefaultWeapon()
 		EquippedWeapon->AttachToComponent(
 			GetMesh(),
 			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-			WeaponAttachSocketName);
+			WeaponAttachSocketName
+			);
+		
+		if (IsValid(CombatComponent))
+		{
+			CombatComponent->RegisterInitialWeapon(EquippedWeapon.Get());
+			
+			if (SecondaryWeaponClass)
+			{
+				AWeaponBase* SecondaryWeapon = GetWorld()->SpawnActor<AWeaponBase>(
+					SecondaryWeaponClass,
+					GetActorTransform(),
+					SpawnParams
+				);
+
+				if (IsValid(SecondaryWeapon))
+				{
+					// 暂时先挂在持枪插槽上，但隐藏备用武器。
+					SecondaryWeapon->AttachToComponent(
+						GetMesh(),
+						FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+						WeaponAttachSocketName
+					);
+
+					SecondaryWeapon->SetActorHiddenInGame(true);
+
+					// 默认武器已成功登记时，备用武器会位于槽位 1。
+					CombatComponent->RegisterInitialWeapon(SecondaryWeapon);
+				}
+			}
+		}
 	}
-	
 }
 
 void ATPS_ShootCharacter::InitializeLocalUI()
@@ -489,9 +523,5 @@ void ATPS_ShootCharacter::RemoveLocalUI()
 void ATPS_ShootCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	RemoveLocalUI();
-	if (HasAuthority() && IsValid(EquippedWeapon))
-	{
-		EquippedWeapon->Destroy();
-	}
 	Super::EndPlay(EndPlayReason);
 }

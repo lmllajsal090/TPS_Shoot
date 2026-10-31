@@ -117,6 +117,10 @@ protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UAmmoWidget> AmmoWidget;
 	
+	// 开局时生成并放入备用槽的武器
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	TSubclassOf<AWeaponBase> SecondaryWeaponClass;
+	
 	void Reload(const FInputActionValue& Value);
 	
 	void InitializeDefaultWeapon();

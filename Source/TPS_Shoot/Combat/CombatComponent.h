@@ -23,6 +23,12 @@ public:
 
 	// 对外接口：获取当前武器
 	AWeaponBase* GetCurrentWeapon() const{return CurrentWeapon;};
+	
+	void RegisterInitialWeapon(AWeaponBase* Weapon);
+	
+	void Fire(const FVector& AimPoint);
+	void Reload();
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
