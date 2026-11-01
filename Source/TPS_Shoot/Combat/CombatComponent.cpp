@@ -28,12 +28,18 @@ void UCombatComponent::Fire(const FVector& AimPoint)
 {
 	ATPS_ShootCharacter* Character = Cast<ATPS_ShootCharacter>(GetOwner());
 
-	if (!IsValid(Character) ||!Character->HasAuthority() ||!IsValid(Character->EquippedWeapon) ||AimPoint.ContainsNaN())
+	if (!IsValid(Character) || !Character->HasAuthority() || AimPoint.ContainsNaN())
 	{
 		return;
 	}
 
-	Character->EquippedWeapon->Fire(AimPoint);
+	AWeaponBase* CurrentWeapon = GetCurrentWeapon();
+	if (!IsValid(CurrentWeapon))
+	{
+		return;
+	}
+
+	CurrentWeapon->Fire(AimPoint);
 }
 
 void UCombatComponent::Reload()
@@ -47,7 +53,40 @@ void UCombatComponent::Reload()
 		return;
 	}
 
-	Character->EquippedWeapon->StartReload();
+	GetCurrentWeapon()->StartReload();
+}
+
+void UCombatComponent::StartFire()
+{
+	ATPS_ShootCharacter* Character = Cast<ATPS_ShootCharacter>(GetOwner());
+	if (!IsValid(Character) || !Character->IsLocallyControlled())
+	{
+		return;
+	}
+
+	AWeaponBase* CurrentWeapon = GetCurrentWeapon();
+	if (!IsValid(CurrentWeapon))
+	{
+		return;
+	}
+
+	const FVector AimPoint = Character->GetAimPoint();
+	if (AimPoint.ContainsNaN())
+	{
+		return;
+	}
+
+	ServerFire(AimPoint);
+}
+
+void UCombatComponent::ServerFire_Implementation(FVector_NetQuantize AimPoint)
+{
+	Fire(AimPoint);
+}
+
+void UCombatComponent::StopFire()
+{
+	
 }
 
 void UCombatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -111,24 +150,38 @@ void UCombatComponent::SwitchWeapon(int32 SlotIndex)
 	
 	ATPS_ShootCharacter* Character = Cast<ATPS_ShootCharacter>(GetOwner());
 
-	if (!IsValid(Character) || Character->EquippedWeapon == NewWeapon)
+	AWeaponBase* CurrentWeapon=GetCurrentWeapon();
+	if (!IsValid(Character)||CurrentWeapon==NewWeapon)
 	{
 		return;
 	}
 	
-	if (IsValid(Character->EquippedWeapon) &&Character->EquippedWeapon->IsReloading())
+	if (IsValid(CurrentWeapon) &&CurrentWeapon->IsReloading())
 	{
 		return;
 	}
 	
 	// 隐藏当前武器。
-	if (IsValid(Character->EquippedWeapon))
+	if (IsValid(CurrentWeapon))
 	{
-		Character->EquippedWeapon->SetActorHiddenInGame(true);
+		CurrentWeapon->SetActorHiddenInGame(true);
 	}
 
 	// 显示目标武器，并更新角色当前装备。
 	NewWeapon->SetActorHiddenInGame(false);
 	Character->SetEquippedWeapon(NewWeapon);
 }
+
+AWeaponBase* UCombatComponent::GetCurrentWeapon() const
+{
+	ATPS_ShootCharacter* Character=Cast<ATPS_ShootCharacter>(GetOwner());
+	if (IsValid(Character))
+	{
+		return Character->EquippedWeapon;
+	}
+	return nullptr;
+}
+
+
+
 

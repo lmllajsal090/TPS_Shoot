@@ -19,6 +19,13 @@ enum class EWeaponType : uint8
 	Pistol UMETA(DisplayName = "Pistol")
 };
 
+UENUM(BlueprintType)
+enum class EFireMode : uint8
+{
+	SemiAutomatic  UMETA(DisplayName = "SemiAutomatic"),
+	Automatic UMETA(DisplayName = "Automatic")
+};
+
 UCLASS()
 class TPS_SHOOT_API AWeaponBase : public AActor
 {
@@ -53,7 +60,16 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Weapon")
 	EWeaponType GetWeaponType() const { return WeaponType; }
+	
+	UFUNCTION(BlueprintPure,Category="FireMode")
+	EFireMode GetFireMode() const { return FireMode; }
+	
+	UFUNCTION(BlueprintPure,Category="FireInterval")
+	float GetFireInterval() const { return FireInterval; }
 protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Fire")
+	EFireMode FireMode=EFireMode::SemiAutomatic;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	EWeaponType WeaponType = EWeaponType::Rifle;
 	

@@ -131,6 +131,8 @@ void ATPS_ShootCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		
 		// Fire
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &ATPS_ShootCharacter::Fire);
+		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &ATPS_ShootCharacter::FireReleased);
+		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Canceled, this, &ATPS_ShootCharacter::FireReleased);
 		
 		// Reload
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &ATPS_ShootCharacter::Reload);
@@ -188,31 +190,24 @@ void ATPS_ShootCharacter::Look(const FInputActionValue& Value)
 
 void ATPS_ShootCharacter::Fire(const FInputActionValue& Value)
 {
-	if (!IsLocallyControlled() || !IsValid(EquippedWeapon))
+	if (!IsLocallyControlled() || !IsValid(CombatComponent))
 	{
 		return;
 	}
-	
-	ServerFire(GetAimPoint());
-	
+
+	CombatComponent->StartFire();
 }
 
-void ATPS_ShootCharacter::ServerFire_Implementation(
-	FVector_NetQuantize AimPoint)
+void ATPS_ShootCharacter::FireReleased(const FInputActionValue& Value)
 {
-
-	if (!IsValid(EquippedWeapon) || AimPoint.ContainsNaN())
+	if (!IsLocallyControlled() || !IsValid(CombatComponent))
 	{
 		return;
 	}
 
-	if (!IsValid(EquippedWeapon) ||!IsValid(CombatComponent) ||AimPoint.ContainsNaN())
-	{
-		return;
-	}
-	
-	CombatComponent->Fire(AimPoint);
+	CombatComponent->StopFire();
 }
+
 
 void ATPS_ShootCharacter::StartAiming()
 {
@@ -562,6 +557,8 @@ void ATPS_ShootCharacter::SetEquippedWeapon(AWeaponBase* NewWeapon)
 	// 监听服务器主机的本地 UI 需要主动刷新。
 	TryBindAmmoWidget();
 }
+
+
 
 void ATPS_ShootCharacter::EquipPrimary(const FInputActionValue& Value)
 {

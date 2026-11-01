@@ -143,8 +143,6 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 
-	UFUNCTION(Server, Reliable)
-	void ServerFire(FVector_NetQuantize AimPoint);
 	
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
@@ -154,6 +152,7 @@ protected:
 
 	/*Callled for Fire*/
 	void Fire(const FInputActionValue& Value);
+	void FireReleased(const FInputActionValue& Value);
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> AimAction;
