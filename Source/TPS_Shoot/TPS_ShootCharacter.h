@@ -45,6 +45,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
 
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> EquipPrimaryAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> EquipSecondaryAction;
+
+	void EquipPrimary(const FInputActionValue& Value);
+	void EquipSecondary(const FInputActionValue& Value);
+
+	UFUNCTION(Server, Reliable)
+	void ServerSwitchWeapon(int32 SlotIndex);
+	
 	virtual void BeginPlay() override;
 	virtual void NotifyControllerChanged() override;
 	virtual void PawnClientRestart() override;

@@ -135,6 +135,26 @@ void ATPS_ShootCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 		// Reload
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &ATPS_ShootCharacter::Reload);
 		
+		if (EquipPrimaryAction)
+		{
+			EnhancedInputComponent->BindAction(
+				EquipPrimaryAction,
+				ETriggerEvent::Started,
+				this,
+				&ATPS_ShootCharacter::EquipPrimary
+			);
+		}
+
+		if (EquipSecondaryAction)
+		{
+			EnhancedInputComponent->BindAction(
+				EquipSecondaryAction,
+				ETriggerEvent::Started,
+				this,
+				&ATPS_ShootCharacter::EquipSecondary
+			);
+		}
+		
 		if (AimAction)
 		{
 			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &ATPS_ShootCharacter::StartAiming);
@@ -541,4 +561,28 @@ void ATPS_ShootCharacter::SetEquippedWeapon(AWeaponBase* NewWeapon)
 
 	// 监听服务器主机的本地 UI 需要主动刷新。
 	TryBindAmmoWidget();
+}
+
+void ATPS_ShootCharacter::EquipPrimary(const FInputActionValue& Value)
+{
+	if (IsLocallyControlled())
+	{
+		ServerSwitchWeapon(0);
+	}
+}
+
+void ATPS_ShootCharacter::EquipSecondary(const FInputActionValue& Value)
+{
+	if (IsLocallyControlled())
+	{
+		ServerSwitchWeapon(1);
+	}
+}
+
+void ATPS_ShootCharacter::ServerSwitchWeapon_Implementation(int32 SlotIndex)
+{
+	if (IsValid(CombatComponent))
+	{
+		CombatComponent->SwitchWeapon(SlotIndex);
+	}
 }

@@ -10,6 +10,15 @@
 class AAProjectileBase;
 class UNiagaraComponent;
 DECLARE_MULTICAST_DELEGATE(FOnWeaponStateChanged)
+
+
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+	Rifle  UMETA(DisplayName = "Rifle"),
+	Pistol UMETA(DisplayName = "Pistol")
+};
+
 UCLASS()
 class TPS_SHOOT_API AWeaponBase : public AActor
 {
@@ -42,7 +51,12 @@ public:
 	
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
+	UFUNCTION(BlueprintPure, Category = "Weapon")
+	EWeaponType GetWeaponType() const { return WeaponType; }
 protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	EWeaponType WeaponType = EWeaponType::Rifle;
+	
 	// 该武器装备在角色手上时使用的 Socket
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Attachment")
 	FName HandSocketName = FName("WeaponSocket");
