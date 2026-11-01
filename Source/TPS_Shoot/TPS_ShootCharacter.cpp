@@ -101,8 +101,12 @@ void ATPS_ShootCharacter::BeginPlay()
 
 void ATPS_ShootCharacter::OnRep_EquippedWeapon()
 {
+	if (IsValid(CombatComponent))
+	{
+		CombatComponent->StopFire();
+	}
+
 	TryBindAmmoWidget();
-	CombatComponent->StopFire();
 }
 
 
@@ -372,11 +376,15 @@ void ATPS_ShootCharacter::DoLook(float Yaw, float Pitch)
 
 void ATPS_ShootCharacter::Reload(const FInputActionValue& Value)
 {
-	CombatComponent->StopFire();
-	if (IsLocallyControlled() && IsValid(EquippedWeapon))
+	if (!IsLocallyControlled() ||
+		!IsValid(CombatComponent) ||
+		!IsValid(EquippedWeapon))
 	{
-		ServerReload();
+		return;
 	}
+
+	CombatComponent->StopFire();
+	ServerReload();
 }
 
 void ATPS_ShootCharacter::InitializeDefaultWeapon()
@@ -563,25 +571,33 @@ void ATPS_ShootCharacter::SetEquippedWeapon(AWeaponBase* NewWeapon)
 
 void ATPS_ShootCharacter::EquipPrimary(const FInputActionValue& Value)
 {
-	if (IsLocallyControlled())
+	if (!IsLocallyControlled() || !IsValid(CombatComponent))
 	{
-		ServerSwitchWeapon(0);
+		return;
 	}
+
+	CombatComponent->StopFire();
+	ServerSwitchWeapon(0);
 }
 
 void ATPS_ShootCharacter::EquipSecondary(const FInputActionValue& Value)
 {
-	if (IsLocallyControlled())
+	if (!IsLocallyControlled() || !IsValid(CombatComponent))
 	{
-		ServerSwitchWeapon(1);
+		return;
 	}
+
+	CombatComponent->StopFire();
+	ServerSwitchWeapon(1);
 }
 
 void ATPS_ShootCharacter::ServerSwitchWeapon_Implementation(int32 SlotIndex)
 {
-	CombatComponent->StopFire();
-	if (IsValid(CombatComponent))
+	if (!IsValid(CombatComponent))
 	{
-		CombatComponent->SwitchWeapon(SlotIndex);
+		return;
 	}
+
+	CombatComponent->StopFire();
+	CombatComponent->SwitchWeapon(SlotIndex);
 }
