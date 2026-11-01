@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Engine/NetSerialization.h"
+#include "TimerManager.h"
 #include "CombatComponent.generated.h"
 
 
@@ -33,6 +34,9 @@ public:
 	void StopFire();
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 protected:
+	bool bFireButtonPressed=false;
+	FTimerHandle FireTimerHandle;
+	TWeakObjectPtr<AWeaponBase>FiringWeapon;
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
@@ -47,6 +51,6 @@ private:
 	bool bIsSwitchingWeapon = false;
 	
 	void AttachWeaponToSocket(AWeaponBase* Weapon, FName SocketName);
-
 	void FinishWeaponSwitch();
+	void TryFire();
 };

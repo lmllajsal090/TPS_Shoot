@@ -101,8 +101,8 @@ void ATPS_ShootCharacter::BeginPlay()
 
 void ATPS_ShootCharacter::OnRep_EquippedWeapon()
 {
-	
 	TryBindAmmoWidget();
+	CombatComponent->StopFire();
 }
 
 
@@ -372,6 +372,7 @@ void ATPS_ShootCharacter::DoLook(float Yaw, float Pitch)
 
 void ATPS_ShootCharacter::Reload(const FInputActionValue& Value)
 {
+	CombatComponent->StopFire();
 	if (IsLocallyControlled() && IsValid(EquippedWeapon))
 	{
 		ServerReload();
@@ -553,7 +554,7 @@ void ATPS_ShootCharacter::SetEquippedWeapon(AWeaponBase* NewWeapon)
 	}
 
 	EquippedWeapon = NewWeapon;
-
+	
 	// 监听服务器主机的本地 UI 需要主动刷新。
 	TryBindAmmoWidget();
 }
@@ -578,6 +579,7 @@ void ATPS_ShootCharacter::EquipSecondary(const FInputActionValue& Value)
 
 void ATPS_ShootCharacter::ServerSwitchWeapon_Implementation(int32 SlotIndex)
 {
+	CombatComponent->StopFire();
 	if (IsValid(CombatComponent))
 	{
 		CombatComponent->SwitchWeapon(SlotIndex);

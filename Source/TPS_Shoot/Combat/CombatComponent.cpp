@@ -2,7 +2,7 @@
 
 
 #include "Combat/CombatComponent.h"
-
+#include "Engine/World.h"
 #include "TPS_ShootCharacter.h"
 #include "TPSWeapon/WeaponBase.h"
 
@@ -65,18 +65,15 @@ void UCombatComponent::StartFire()
 	}
 
 	AWeaponBase* CurrentWeapon = GetCurrentWeapon();
-	if (!IsValid(CurrentWeapon))
+	if (!IsValid(CurrentWeapon)||bFireButtonPressed)
 	{
 		return;
 	}
-
-	const FVector AimPoint = Character->GetAimPoint();
-	if (AimPoint.ContainsNaN())
-	{
-		return;
-	}
-
-	ServerFire(AimPoint);
+	
+	FiringWeapon=CurrentWeapon;
+	bFireButtonPressed=true;
+	TryFire();
+	
 }
 
 void UCombatComponent::ServerFire_Implementation(FVector_NetQuantize AimPoint)
@@ -86,7 +83,14 @@ void UCombatComponent::ServerFire_Implementation(FVector_NetQuantize AimPoint)
 
 void UCombatComponent::StopFire()
 {
-	
+	bFireButtonPressed = false;
+	FiringWeapon .Reset();
+
+	// 清除定时器
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(FireTimerHandle);
+	}
 }
 
 void UCombatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -102,6 +106,7 @@ void UCombatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		}
 		WeaponSlots.Empty(); 
 	}
+	StopFire();
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -119,6 +124,64 @@ void UCombatComponent::AttachWeaponToSocket(AWeaponBase* Weapon, FName SocketNam
 void UCombatComponent::FinishWeaponSwitch()
 {
 	
+}
+
+void UCombatComponent::TryFire()
+{
+	ATPS_ShootCharacter* Character =Cast<ATPS_ShootCharacter>(GetOwner());
+
+	AWeaponBase* CurrentWeapon = GetCurrentWeapon();
+
+	if (!IsValid(Character) ||
+		!Character->IsLocallyControlled() ||
+		!bFireButtonPressed ||
+		!IsValid(CurrentWeapon) ||
+		FiringWeapon.Get() != CurrentWeapon)
+	{
+		StopFire();
+		return;
+	}
+
+	if (CurrentWeapon->IsReloading() ||CurrentWeapon->GetCurrentAmmo() <= 0)
+	{
+		StopFire();
+		return;
+	}
+
+	const FVector AimPoint = Character->GetAimPoint();
+
+	if (AimPoint.ContainsNaN())
+	{
+		StopFire();
+		return;
+	}
+
+	// 每次请求都重新计算瞄准点，是否实际射击由服务器决定。
+	ServerFire(AimPoint);
+
+	// 半自动只请求这一发，等待松开后再次按下。
+	if (CurrentWeapon->GetFireMode() != EFireMode::Automatic)
+	{
+		return;
+	}
+
+	const float Interval = CurrentWeapon->GetFireInterval();
+	UWorld* World = GetWorld();
+
+	if (!World || !FMath::IsFinite(Interval) || Interval <= 0.f)
+	{
+		StopFire();
+		return;
+	}
+
+	// 等待一个射击间隔，再次进入 TryFire 检查并请求下一发。
+	World->GetTimerManager().SetTimer(
+		FireTimerHandle,
+		this,
+		&UCombatComponent::TryFire,
+		Interval,
+		false
+	);
 }
 
 
