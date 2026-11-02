@@ -86,6 +86,8 @@ public:
 	TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	void SetEquippedWeapon(AWeaponBase* NewWeapon);
+	
+	void ApplyRecoil(float PitchAmount, float YawRange);
 protected:
 
 	/** Camera boom positioning the camera behind the character */

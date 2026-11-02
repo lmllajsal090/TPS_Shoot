@@ -20,6 +20,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Blueprint/UserWidget.h"
 #include "Combat/CombatComponent.h"
+#include "GameFramework/PlayerController.h"
+#include "Camera/PlayerCameraManager.h"
 
 
 ATPS_ShootCharacter::ATPS_ShootCharacter()
@@ -567,6 +569,33 @@ void ATPS_ShootCharacter::SetEquippedWeapon(AWeaponBase* NewWeapon)
 	TryBindAmmoWidget();
 }
 
+void ATPS_ShootCharacter::ApplyRecoil(float PitchAmount, float YawRange)
+{
+	if (!IsLocallyControlled())
+	{
+		return;
+	}
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!IsValid(PC) || !IsValid(PC->PlayerCameraManager))
+	{
+		return;
+	}
+	
+	FRotator Rotation = PC->GetControlRotation();
+
+	Rotation.Pitch = FMath::ClampAngle(
+		Rotation.Pitch + PitchAmount,
+		PC->PlayerCameraManager->ViewPitchMin,
+		PC->PlayerCameraManager->ViewPitchMax
+	);
+
+	Rotation.Yaw = FRotator::NormalizeAxis(
+		Rotation.Yaw + FMath::FRandRange(-YawRange, YawRange)
+	);
+
+	PC->SetControlRotation(Rotation);
+}
 
 
 void ATPS_ShootCharacter::EquipPrimary(const FInputActionValue& Value)

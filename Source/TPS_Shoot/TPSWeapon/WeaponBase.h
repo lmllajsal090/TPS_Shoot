@@ -10,6 +10,8 @@
 class AAProjectileBase;
 class UNiagaraComponent;
 class USoundBase;
+class USoundAttenuation;
+class USoundConcurrency;
 DECLARE_MULTICAST_DELEGATE(FOnWeaponStateChanged)
 
 
@@ -67,7 +69,22 @@ public:
 	
 	UFUNCTION(BlueprintPure,Category="FireInterval")
 	float GetFireInterval() const { return FireInterval; }
+
 protected:
+	// 每发射击向上抬多少度。
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Recoil",meta = (ClampMin = "0"))
+	float RecoilPitch = 0.5f;
+
+	// 每发左右随机偏移的最大角度。
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Recoil",meta = (ClampMin = "0"))
+	float RecoilYawRange = 0.15f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Audio")
+	TObjectPtr<USoundAttenuation> FireAttenuation;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Audio")
+	TObjectPtr<USoundConcurrency> FireConcurrency;
+	
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Weapon|Effects")
 	TObjectPtr<USoundBase> FireSound;
 	

@@ -6,8 +6,12 @@
 #include "GameFramework/DamageType.h"
 #include "TPS_Shoot.h"
 #include "NiagaraComponent.h"
+#include "TPS_ShootCharacter.h"
 #include "Net/UnrealNetwork.h"
+#include "Sound/SoundAttenuation.h"
+#include "Sound/SoundConcurrency.h"
 #include "Projectile/AProjectileBase.h"
+
 
 // Sets default values
 AWeaponBase::AWeaponBase()
@@ -152,8 +156,21 @@ void AWeaponBase::MulticastPlayFireEffects_Implementation()
 		UGameplayStatics::PlaySoundAtLocation(
 			this,
 			FireSound,
-			SoundLocation
-		);
+			SoundLocation,
+			FRotator::ZeroRotator,
+			1.f,                 // 音量倍率
+			1.f,                 // 音高倍率
+			0.f,                 // 从声音开头播放
+			FireAttenuation,
+			FireConcurrency,
+			this                 // 并发规则使用的声音拥有者
+			);
+	}
+	
+	if (ATPS_ShootCharacter* Character =
+	Cast<ATPS_ShootCharacter>(GetOwner()))
+	{
+		Character->ApplyRecoil(RecoilPitch, RecoilYawRange);
 	}
 }
 
@@ -193,5 +210,6 @@ void AWeaponBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& Ou
 	DOREPLIFETIME(AWeaponBase, ReserveAmmo);
 	DOREPLIFETIME(AWeaponBase, bIsReloading);
 }
+
 
 
