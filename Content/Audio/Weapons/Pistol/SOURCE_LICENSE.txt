@@ -1,0 +1,20 @@
+# 1911 pistol gunshot audio
+
+Source: The Free Firearm Sound Library (Prepared SFX Library)
+Source page: https://opengameart.org/content/the-free-firearm-sound-library
+Archive: https://opengameart.org/sites/default/files/Prepared%20SFX%20Library.7z
+Authors: Ben Jaszczak, Brian Nelson, Kevin Heras, Matthew Nanney
+License: CC0 1.0 Universal
+License URL: https://creativecommons.org/publicdomain/zero/1.0/
+Source/license rechecked online: 2026-11-02
+The source archive was already cached locally from an earlier download.
+
+Original: Prepared SFX Library/1911/A_42P.wav
+BWF description: 1911, handgun, pistol, semi automatic, .45, gunshot, near distance, front of shooter, left, right, stereo
+Original duration: 9.522854 seconds, with two separated shots.
+Derived asset: S_1911_Single_Near
+Edits: crop source 0.90-2.40 seconds; 3 ms fade-in; 120 ms fade-out.
+Output: 1.50 seconds, stereo, 96 kHz, 24-bit PCM WAV; no loop.
+Original recordings retained outside the project at F:/TPS/PistolAudio/Source/.
+
+This delivery imports a new SoundWave only. It does not assign the sound to BP_Pistol or alter gameplay code.

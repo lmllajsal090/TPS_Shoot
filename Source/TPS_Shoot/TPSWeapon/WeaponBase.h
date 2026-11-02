@@ -9,6 +9,7 @@
 
 class AAProjectileBase;
 class UNiagaraComponent;
+class USoundBase;
 DECLARE_MULTICAST_DELEGATE(FOnWeaponStateChanged)
 
 
@@ -67,6 +68,9 @@ public:
 	UFUNCTION(BlueprintPure,Category="FireInterval")
 	float GetFireInterval() const { return FireInterval; }
 protected:
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Weapon|Effects")
+	TObjectPtr<USoundBase> FireSound;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon|Fire")
 	EFireMode FireMode=EFireMode::SemiAutomatic;
 	

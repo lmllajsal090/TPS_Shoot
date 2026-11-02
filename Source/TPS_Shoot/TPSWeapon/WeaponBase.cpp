@@ -130,9 +130,30 @@ void AWeaponBase::OnRep_WeaponState()
 
 void AWeaponBase::MulticastPlayFireEffects_Implementation()
 {
-	if (GetNetMode() != NM_DedicatedServer && IsValid(MuzzleFlashComponent))
+	if (GetNetMode() == NM_DedicatedServer)
+	{
+		return;
+	}
+
+	if (IsValid(MuzzleFlashComponent))
 	{
 		MuzzleFlashComponent->Activate(true);
+	}
+
+	if (IsValid(FireSound))
+	{
+		FVector SoundLocation = GetActorLocation();
+
+		if (IsValid(WeaponMesh) &&WeaponMesh->DoesSocketExist(WeaponMuzzleSocketName))
+		{
+			SoundLocation =WeaponMesh->GetSocketLocation(WeaponMuzzleSocketName);
+		}
+
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			FireSound,
+			SoundLocation
+		);
 	}
 }
 
