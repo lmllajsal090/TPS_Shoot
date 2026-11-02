@@ -88,6 +88,7 @@ public:
 	void SetEquippedWeapon(AWeaponBase* NewWeapon);
 	
 	void ApplyRecoil(float PitchAmount, float YawRange);
+	void NotifyCrosshairShot(float SpreadPerShot, float MaximumSpread, float RecoverySpeed);
 protected:
 
 	/** Camera boom positioning the camera behind the character */
@@ -140,6 +141,7 @@ protected:
 	
 	void TryBindAmmoWidget();
 	void RemoveLocalUI();
+	void ResetCrosshairSpread();
 	
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

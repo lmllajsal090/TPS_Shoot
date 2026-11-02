@@ -167,10 +167,10 @@ void AWeaponBase::MulticastPlayFireEffects_Implementation()
 			);
 	}
 	
-	if (ATPS_ShootCharacter* Character =
-	Cast<ATPS_ShootCharacter>(GetOwner()))
+	if (ATPS_ShootCharacter* Character =Cast<ATPS_ShootCharacter>(GetOwner()))
 	{
 		Character->ApplyRecoil(RecoilPitch, RecoilYawRange);
+		Character->NotifyCrosshairShot(CrosshairSpreadPerShot, CrosshairMaxSpread, CrosshairRecoverySpeed);
 	}
 }
 

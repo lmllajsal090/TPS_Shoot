@@ -16,6 +16,7 @@
 #include "Engine/World.h"
 #include "CollisionQueryParams.h"
 #include "UI/AMmoWidget.h"
+#include "UI/CrosshairWidget.h"
 #include "GameFramework/PlayerController.h"
 #include "Net/UnrealNetwork.h"
 #include "Blueprint/UserWidget.h"
@@ -103,6 +104,7 @@ void ATPS_ShootCharacter::BeginPlay()
 
 void ATPS_ShootCharacter::OnRep_EquippedWeapon()
 {
+	ResetCrosshairSpread();
 	if (IsValid(CombatComponent))
 	{
 		CombatComponent->StopFire();
@@ -564,6 +566,7 @@ void ATPS_ShootCharacter::SetEquippedWeapon(AWeaponBase* NewWeapon)
 	}
 
 	EquippedWeapon = NewWeapon;
+	ResetCrosshairSpread();
 	
 	// 监听服务器主机的本地 UI 需要主动刷新。
 	TryBindAmmoWidget();
@@ -629,4 +632,25 @@ void ATPS_ShootCharacter::ServerSwitchWeapon_Implementation(int32 SlotIndex)
 
 	CombatComponent->StopFire();
 	CombatComponent->SwitchWeapon(SlotIndex);
+}
+
+void ATPS_ShootCharacter::NotifyCrosshairShot(float SpreadPerShot, float MaximumSpread, float RecoverySpeed)
+{
+	if (!IsLocallyControlled())
+	{
+		return;
+	}
+
+	if (UCrosshairWidget* Widget = Cast<UCrosshairWidget>(CrosshairWidget))
+	{
+		Widget->NotifyShot(SpreadPerShot, MaximumSpread, RecoverySpeed);
+	}
+}
+
+void ATPS_ShootCharacter::ResetCrosshairSpread()
+{
+	if (UCrosshairWidget* Widget = Cast<UCrosshairWidget>(CrosshairWidget))
+	{
+		Widget->ResetSpread();
+	}
 }

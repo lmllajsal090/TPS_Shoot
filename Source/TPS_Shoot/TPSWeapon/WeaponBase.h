@@ -71,6 +71,16 @@ public:
 	float GetFireInterval() const { return FireInterval; }
 
 protected:
+	// Visual feedback in widget units; this does not change projectile spread.
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Crosshair", meta = (ClampMin = "0"))
+	float CrosshairSpreadPerShot = 5.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Crosshair", meta = (ClampMin = "0"))
+	float CrosshairMaxSpread = 14.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Crosshair", meta = (ClampMin = "0.01"))
+	float CrosshairRecoverySpeed = 4.f;
+
 	// 每发射击向上抬多少度。
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Recoil",meta = (ClampMin = "0"))
 	float RecoilPitch = 0.5f;
