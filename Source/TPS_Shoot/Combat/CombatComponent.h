@@ -24,6 +24,9 @@ public:
 	// 对外接口：请求切换武器
 	void SwitchWeapon(int32 SlotIndex);
 
+	UFUNCTION(BlueprintPure, Category = "Combat")
+	bool IsSwitchingWeapon() const{return bIsSwitchingWeapon;}
+	
 	// 对外接口：获取当前武器
 	AWeaponBase* GetCurrentWeapon() const;
 	
