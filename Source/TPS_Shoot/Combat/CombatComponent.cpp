@@ -4,6 +4,8 @@
 #include "Combat/CombatComponent.h"
 #include "Engine/World.h"
 #include "TPS_ShootCharacter.h"
+#include "Animation/AnimMontage.h"
+#include "Net/UnrealNetwork.h"
 #include "TPSWeapon/WeaponBase.h"
 
 // Sets default values for this component's properties
@@ -26,6 +28,10 @@ void UCombatComponent::RegisterInitialWeapon(AWeaponBase* Weapon)
 
 void UCombatComponent::Fire(const FVector& AimPoint)
 {
+	if (bIsSwitchingWeapon)
+	{
+		return;
+	}
 	ATPS_ShootCharacter* Character = Cast<ATPS_ShootCharacter>(GetOwner());
 
 	if (!IsValid(Character) || !Character->HasAuthority() || AimPoint.ContainsNaN())
@@ -48,7 +54,8 @@ void UCombatComponent::Reload()
 
 	if (!IsValid(Character) ||
 		!Character->HasAuthority() ||
-		!IsValid(Character->EquippedWeapon))
+		!IsValid(Character->EquippedWeapon)||
+		bIsSwitchingWeapon)
 	{
 		return;
 	}
@@ -59,7 +66,7 @@ void UCombatComponent::Reload()
 void UCombatComponent::StartFire()
 {
 	ATPS_ShootCharacter* Character = Cast<ATPS_ShootCharacter>(GetOwner());
-	if (!IsValid(Character) || !Character->IsLocallyControlled())
+	if (!IsValid(Character) || !Character->IsLocallyControlled()||bIsSwitchingWeapon)
 	{
 		return;
 	}
@@ -107,6 +114,14 @@ void UCombatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		WeaponSlots.Empty(); 
 	}
 	StopFire();
+	if (UWorld* World = GetWorld())
+	{
+		FTimerManager& TimerManager = World->GetTimerManager();
+
+		TimerManager.ClearTimer(WeaponSwitchCommitTimerHandle);
+		TimerManager.ClearTimer(WeaponSwitchFinishTimerHandle);
+		TimerManager.ClearTimer(WeaponSwitchHideTimerHandle);
+	}
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -123,7 +138,22 @@ void UCombatComponent::AttachWeaponToSocket(AWeaponBase* Weapon, FName SocketNam
 
 void UCombatComponent::FinishWeaponSwitch()
 {
-	
+	if (!IsValid(GetOwner()) || !GetOwner()->HasAuthority())
+	{
+		return;
+	}
+
+	if (UWorld* World = GetWorld())
+	{
+		FTimerManager& TimerManager = World->GetTimerManager();
+
+		TimerManager.ClearTimer(WeaponSwitchCommitTimerHandle);
+		TimerManager.ClearTimer(WeaponSwitchFinishTimerHandle);
+		TimerManager.ClearTimer(WeaponSwitchHideTimerHandle);
+	}
+
+	PendingWeapon = nullptr;
+	bIsSwitchingWeapon = false;
 }
 
 void UCombatComponent::TryFire()
@@ -188,13 +218,54 @@ void UCombatComponent::TryFire()
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UCombatComponent, bIsSwitchingWeapon);
+}
+
+void UCombatComponent::CommitWeaponSwitch()
+{
+	ATPS_ShootCharacter* Character =Cast<ATPS_ShootCharacter>(GetOwner());
+	// 实际装备变更只由服务器执行。
+	if (!IsValid(Character) || !Character->HasAuthority())
+	{
+		return;
+	}
+
+	if (!bIsSwitchingWeapon)
+	{
+		return;
+	}
+	
+	if (!IsValid(PendingWeapon))
+	{
+		FinishWeaponSwitch();
+		return;
+	}
+	PendingWeapon->SetActorHiddenInGame(false);
+	Character->SetEquippedWeapon(PendingWeapon.Get());
+}
+
+void UCombatComponent::HideCurrentWeapon()
+{
+	AWeaponBase* CurrentWeapon = GetCurrentWeapon();
+	
+	if (IsValid(CurrentWeapon))
+	{
+		CurrentWeapon->SetActorHiddenInGame(true);
+	}
 	
 }
 
 void UCombatComponent::SwitchWeapon(int32 SlotIndex)
 {
-	
-	if (!IsValid(GetOwner()) || !GetOwner()->HasAuthority())
+	ATPS_ShootCharacter* Character =Cast<ATPS_ShootCharacter>(GetOwner());
+
+	if (!IsValid(Character) || !Character->HasAuthority())
+	{
+		return;
+	}
+
+	// 正在切枪时，不接受新的切枪请求。
+	if (bIsSwitchingWeapon)
 	{
 		return;
 	}
@@ -203,36 +274,93 @@ void UCombatComponent::SwitchWeapon(int32 SlotIndex)
 	{
 		return;
 	}
-	
+
 	AWeaponBase* NewWeapon = WeaponSlots[SlotIndex];
+	AWeaponBase* CurrentWeapon = GetCurrentWeapon();
 
-	if (!IsValid(NewWeapon))
+	if (!IsValid(NewWeapon) || NewWeapon == CurrentWeapon)
 	{
 		return;
 	}
-	
-	ATPS_ShootCharacter* Character = Cast<ATPS_ShootCharacter>(GetOwner());
 
-	AWeaponBase* CurrentWeapon=GetCurrentWeapon();
-	if (!IsValid(Character)||CurrentWeapon==NewWeapon)
+	// 第一版不允许在换弹过程中切枪。
+	if (IsValid(CurrentWeapon) && CurrentWeapon->IsReloading())
 	{
 		return;
 	}
-	
-	if (IsValid(CurrentWeapon) &&CurrentWeapon->IsReloading())
+
+	UWorld* World = GetWorld();
+	if (!World)
 	{
 		return;
 	}
-	
-	// 隐藏当前武器。
-	if (IsValid(CurrentWeapon))
+
+	UAnimMontage* SwitchMontage = nullptr;
+	float CommitTime = 0.f;
+	float HideTime=0.f;
+
+	// 根据目标武器选择动作及实际换枪时刻。
+	switch (NewWeapon->GetWeaponType())
 	{
-		CurrentWeapon->SetActorHiddenInGame(true);
+	case EWeaponType::Pistol:
+		SwitchMontage = AM_SwitchToPistol.Get();
+		HideTime = 0.4f;
+		CommitTime=0.82f;
+		break;
+
+	case EWeaponType::Rifle:
+		SwitchMontage = AM_SwitchToRifle.Get();
+		HideTime = 0.26f;
+		CommitTime=0.56f;
+		break;
+
+	default:
+		return;
 	}
 
-	// 显示目标武器，并更新角色当前装备。
-	NewWeapon->SetActorHiddenInGame(false);
-	Character->SetEquippedWeapon(NewWeapon);
+	if (!IsValid(SwitchMontage))
+	{
+		return;
+	}
+
+	// 目前约定 Montage 以 1 倍速播放。
+	const float FinishTime = SwitchMontage->GetPlayLength();
+
+	StopFire();
+
+	PendingWeapon = NewWeapon;
+	bIsSwitchingWeapon = true;
+
+	// 此处由服务器调用，通知服务器和相关客户端播放。
+	MulticastPlayWeaponSwitch(SwitchMontage);
+	
+	FTimerManager& TimerManager = World->GetTimerManager();
+
+	// 动作中途，真正更换装备。
+	TimerManager.SetTimer(
+		WeaponSwitchCommitTimerHandle,
+		this,
+		&UCombatComponent::CommitWeaponSwitch,
+		CommitTime,
+		false
+	);
+
+	TimerManager.SetTimer(
+		WeaponSwitchHideTimerHandle,
+		this,
+		&UCombatComponent::HideCurrentWeapon,
+		HideTime,
+		false
+	);
+	
+	// 整个动作时间结束，解除切枪状态。
+	TimerManager.SetTimer(
+		WeaponSwitchFinishTimerHandle,
+		this,
+		&UCombatComponent::FinishWeaponSwitch,
+		FinishTime,
+		false
+	);
 }
 
 AWeaponBase* UCombatComponent::GetCurrentWeapon() const
@@ -245,6 +373,25 @@ AWeaponBase* UCombatComponent::GetCurrentWeapon() const
 	return nullptr;
 }
 
+void UCombatComponent::MulticastPlayWeaponSwitch_Implementation(UAnimMontage* SwitchMontage)
+{
+	StopFire();
+	// 独立服务器不需要播放表现动画。
+	if (GetNetMode() == NM_DedicatedServer)
+	{
+		return;
+	}
+	
+	ATPS_ShootCharacter* Character =Cast<ATPS_ShootCharacter>(GetOwner());
 
+	if (!IsValid(Character) || !IsValid(SwitchMontage))
+	{
+		return;
+	}
+	
+	USkeletalMeshComponent* CharacterMesh = Character->GetMesh();
+	UAnimInstance* AnimInstance = CharacterMesh->GetAnimInstance();
+	AnimInstance->Montage_Play(SwitchMontage, 1.f);
+}
 
 

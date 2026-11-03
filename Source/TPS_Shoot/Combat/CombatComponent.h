@@ -10,6 +10,7 @@
 
 
 class AWeaponBase;
+class UAnimMontage;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TPS_SHOOT_API UCombatComponent : public UActorComponent
@@ -34,6 +35,18 @@ public:
 	void StopFire();
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 protected:
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastPlayWeaponSwitch(UAnimMontage* SwitchMontage);
+	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Weapon|Montage")
+	TObjectPtr<UAnimMontage> AM_SwitchToPistol;
+	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Weapon|Montage")
+	TObjectPtr<UAnimMontage> AM_SwitchToRifle;
+	
+	UPROPERTY()
+	TObjectPtr<AWeaponBase> PendingWeapon;
+	
 	bool bFireButtonPressed=false;
 	FTimerHandle FireTimerHandle;
 	TWeakObjectPtr<AWeaponBase>FiringWeapon;
@@ -47,10 +60,16 @@ protected:
 private:	
 	UPROPERTY()
 	TArray<AWeaponBase*> WeaponSlots;
-	
+	UPROPERTY(Replicated)
 	bool bIsSwitchingWeapon = false;
 	
 	void AttachWeaponToSocket(AWeaponBase* Weapon, FName SocketName);
 	void FinishWeaponSwitch();
 	void TryFire();
+	void CommitWeaponSwitch();
+	void HideCurrentWeapon();
+
+	FTimerHandle WeaponSwitchHideTimerHandle;
+	FTimerHandle WeaponSwitchCommitTimerHandle;
+	FTimerHandle WeaponSwitchFinishTimerHandle;
 };
