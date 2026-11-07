@@ -14,6 +14,7 @@ class UCameraComponent;
 class UInputAction;
 class AWeaponBase;
 struct FInputActionValue;
+class UHealthComponent;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -91,6 +92,9 @@ public:
 	void NotifyCrosshairShot(float SpreadPerShot, float MaximumSpread, float RecoverySpeed);
 protected:
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UHealthComponent> HealthComponent;
+	
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpringArmComponent> CameraBoom;
