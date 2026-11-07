@@ -33,6 +33,9 @@ public:
 	ATPS_ShootCharacter();	
 
 	FVector GetAimPoint() const;
+
+	UFUNCTION(BlueprintPure, Category = "Health")
+	bool IsDead() const;
 	
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoMove(float Right, float Forward);
@@ -91,6 +94,11 @@ public:
 	void ApplyRecoil(float PitchAmount, float YawRange);
 	void NotifyCrosshairShot(float SpreadPerShot, float MaximumSpread, float RecoverySpeed);
 protected:
+	UFUNCTION()
+	void HandleDeath();
+
+	// Local guard: each machine handles this character's death once.
+	bool bDeathHandled = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UHealthComponent> HealthComponent;

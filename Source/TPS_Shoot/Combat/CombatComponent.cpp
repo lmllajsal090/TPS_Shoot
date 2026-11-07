@@ -34,7 +34,8 @@ void UCombatComponent::Fire(const FVector& AimPoint)
 	}
 	ATPS_ShootCharacter* Character = Cast<ATPS_ShootCharacter>(GetOwner());
 
-	if (!IsValid(Character) || !Character->HasAuthority() || AimPoint.ContainsNaN())
+	if (!IsValid(Character) || !Character->HasAuthority() ||
+		Character->IsDead() || AimPoint.ContainsNaN())
 	{
 		return;
 	}
@@ -52,10 +53,8 @@ void UCombatComponent::Reload()
 {
 	ATPS_ShootCharacter* Character = Cast<ATPS_ShootCharacter>(GetOwner());
 
-	if (!IsValid(Character) ||
-		!Character->HasAuthority() ||
-		!IsValid(Character->EquippedWeapon)||
-		bIsSwitchingWeapon)
+	if (!IsValid(Character) ||!Character->HasAuthority() ||Character->IsDead() ||
+		!IsValid(Character->EquippedWeapon)||bIsSwitchingWeapon)
 	{
 		return;
 	}
@@ -66,7 +65,8 @@ void UCombatComponent::Reload()
 void UCombatComponent::StartFire()
 {
 	ATPS_ShootCharacter* Character = Cast<ATPS_ShootCharacter>(GetOwner());
-	if (!IsValid(Character) || !Character->IsLocallyControlled()||bIsSwitchingWeapon)
+	if (!IsValid(Character) || !Character->IsLocallyControlled() ||
+		Character->IsDead() || bIsSwitchingWeapon)
 	{
 		return;
 	}
@@ -163,6 +163,7 @@ void UCombatComponent::TryFire()
 	AWeaponBase* CurrentWeapon = GetCurrentWeapon();
 
 	if (!IsValid(Character) ||
+		Character->IsDead() ||
 		!Character->IsLocallyControlled() ||
 		!bFireButtonPressed ||
 		!IsValid(CurrentWeapon) ||
@@ -259,7 +260,7 @@ void UCombatComponent::SwitchWeapon(int32 SlotIndex)
 {
 	ATPS_ShootCharacter* Character =Cast<ATPS_ShootCharacter>(GetOwner());
 
-	if (!IsValid(Character) || !Character->HasAuthority())
+	if (!IsValid(Character) || !Character->HasAuthority() || Character->IsDead())
 	{
 		return;
 	}

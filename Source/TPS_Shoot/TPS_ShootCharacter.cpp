@@ -101,6 +101,43 @@ void ATPS_ShootCharacter::BeginPlay()
 				*SocketName.ToString());
 		}
 	}
+
+	if (IsValid(HealthComponent))
+	{
+		HealthComponent->OnDeath.AddUniqueDynamic(this, &ATPS_ShootCharacter::HandleDeath);
+
+		// Initial replication may have arrived before the delegate was bound.
+		if (IsDead())
+		{
+			HandleDeath();
+		}
+	}
+}
+
+bool ATPS_ShootCharacter::IsDead() const
+{
+	return IsValid(HealthComponent) && HealthComponent->GetIsDead();
+}
+
+void ATPS_ShootCharacter::HandleDeath()
+{
+	if (bDeathHandled)
+	{
+		return;
+	}
+
+	bDeathHandled = true;
+
+	if (IsValid(CombatComponent))
+	{
+		CombatComponent->StopFire();
+	}
+
+	bIsAiming = false;
+	ApplyAimingState();
+
+	GetCharacterMovement()->StopMovementImmediately();
+	GetCharacterMovement()->DisableMovement();
 }
 
 void ATPS_ShootCharacter::OnRep_EquippedWeapon()
@@ -230,7 +267,7 @@ void ATPS_ShootCharacter::StopAiming()
 
 void ATPS_ShootCharacter::SetAiming(bool bNewAiming)
 {
-	if (!IsLocallyControlled())
+	if (!IsLocallyControlled() || (bNewAiming && IsDead()))
 	{
 		return;
 	}
@@ -246,7 +283,7 @@ void ATPS_ShootCharacter::SetAiming(bool bNewAiming)
 
 void ATPS_ShootCharacter::ServerSetAiming_Implementation(bool bNewAiming)
 {
-	bIsAiming = bNewAiming;
+	bIsAiming = bNewAiming && !IsDead();
 	ApplyAimingState();
 }
 
@@ -257,6 +294,12 @@ void ATPS_ShootCharacter::OnRep_IsAiming()
 
 void ATPS_ShootCharacter::ApplyAimingState()
 {
+	// A late aiming update must not re-enable aiming after death.
+	if (IsDead())
+	{
+		bIsAiming = false;
+	}
+
 	if (!bAimSettingsInitialized)
 	{
 		return;
