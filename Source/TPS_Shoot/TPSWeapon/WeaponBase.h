@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "TimerManager.h"
+#include "Engine/NetSerialization.h"
 #include "WeaponBase.generated.h"
 
 class AAProjectileBase;
@@ -12,6 +13,8 @@ class UNiagaraComponent;
 class USoundBase;
 class USoundAttenuation;
 class USoundConcurrency;
+class UMaterialInterface;
+class UPrimitiveComponent;
 DECLARE_MULTICAST_DELEGATE(FOnWeaponStateChanged)
 
 
@@ -42,6 +45,7 @@ public:
 	
 	void Fire(const FVector& AimPoint);
 	void StartReload();
+	void HandleProjectileImpact(const FHitResult& Hit);
 	
 	UFUNCTION(BlueprintPure, Category = "Weapon|Reload")
 	bool IsReloading() const { return bIsReloading; }
@@ -71,6 +75,23 @@ public:
 	float GetFireInterval() const { return FireInterval; }
 
 protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Impact")
+	TObjectPtr<UMaterialInterface> ImpactDecalMaterial;
+
+	// X is projection depth; Y/Z are the half-size on the surface, in centimeters.
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Impact", meta = (ClampMin = "0.1", Units = "cm"))
+	FVector ImpactDecalSize = FVector(1.5f, 3.5f, 3.5f);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Impact", meta = (ClampMin = "0.1", Units = "s"))
+	float ImpactDecalLifetime = 12.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Impact", meta = (ClampMin = "0.0", Units = "s"))
+	float ImpactDecalFadeDuration = 3.f;
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastPlayImpactDecal(UPrimitiveComponent* HitComponent, FVector_NetQuantize ImpactPoint,
+		FVector_NetQuantizeNormal ImpactNormal, float Roll);
+
 	// Visual feedback in widget units; this does not change projectile spread.
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Crosshair", meta = (ClampMin = "0"))
 	float CrosshairSpreadPerShot = 5.f;

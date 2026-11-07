@@ -6,6 +6,10 @@
 #include "GameFramework/DamageType.h"
 #include "TPS_Shoot.h"
 #include "NiagaraComponent.h"
+#include "Components/DecalComponent.h"
+#include "Materials/MaterialInterface.h"
+#include "Components/StaticMeshComponent.h"
+#include "GameFramework/Pawn.h"
 #include "TPS_ShootCharacter.h"
 #include "Net/UnrealNetwork.h"
 #include "Sound/SoundAttenuation.h"
@@ -96,6 +100,47 @@ void AWeaponBase::Fire(const FVector& AimPoint)
 	MulticastPlayFireEffects();
 	
 	OnWeaponStateChanged.Broadcast();
+}
+
+void AWeaponBase::HandleProjectileImpact(const FHitResult& Hit)
+{
+	UPrimitiveComponent* HitComponent = Hit.GetComponent();
+	AActor* HitActor = Hit.GetActor();
+	if (!HasAuthority() || !IsValid(ImpactDecalMaterial) || !Hit.bBlockingHit ||
+		!IsValid(HitActor) || HitActor->IsA<APawn>() ||
+		!IsValid(HitComponent) || !HitComponent->IsA<UStaticMeshComponent>() || !HitComponent->bReceivesDecals)
+	{
+		return;
+	}
+
+	// Broadcast from the persistent weapon, since the projectile is destroyed on impact.
+	MulticastPlayImpactDecal(HitComponent, Hit.ImpactPoint, Hit.ImpactNormal.GetSafeNormal(), FMath::FRandRange(0.f, 360.f));
+}
+
+void AWeaponBase::MulticastPlayImpactDecal_Implementation(UPrimitiveComponent* HitComponent,
+	FVector_NetQuantize ImpactPoint, FVector_NetQuantizeNormal ImpactNormal, float Roll)
+{
+	if (GetNetMode() == NM_DedicatedServer || !IsValid(ImpactDecalMaterial) || ImpactNormal.IsNearlyZero())
+	{
+		return;
+	}
+
+	// Decals project along local -X, into the surface opposite its outward normal.
+	FRotator Rotation = ImpactNormal.Rotation();
+	Rotation.Roll = Roll;
+	const FVector Location = FVector(ImpactPoint) + FVector(ImpactNormal) * 0.05f;
+	UDecalComponent* Decal = IsValid(HitComponent)
+		? UGameplayStatics::SpawnDecalAttached(ImpactDecalMaterial, ImpactDecalSize, HitComponent, NAME_None,
+			Location, Rotation, EAttachLocation::KeepWorldPosition)
+		: UGameplayStatics::SpawnDecalAtLocation(this, ImpactDecalMaterial, ImpactDecalSize, Location, Rotation);
+
+	if (Decal)
+	{
+		Decal->ComponentTags.Add(TEXT("BulletImpact"));
+		Decal->SetFadeScreenSize(0.0005f);
+		// Only the local decal component expires; never destroy the wall/prop it is attached to.
+		Decal->SetFadeOut(FMath::Max(0.1f, ImpactDecalLifetime), FMath::Max(0.f, ImpactDecalFadeDuration), false);
+	}
 }
 
 void AWeaponBase::StartReload()

@@ -8,6 +8,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
+#include "TPSWeapon/WeaponBase.h"
 
 // Sets default values
 AAProjectileBase::AAProjectileBase()
@@ -86,6 +87,11 @@ void AAProjectileBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAct
 
 	// 在请求伤害之前标记，避免重复处理。
 	bHasHit = true;
+
+	if (AWeaponBase* Weapon = Cast<AWeaponBase>(GetOwner()))
+	{
+		Weapon->HandleProjectileImpact(Hit);
+	}
 
 	UGameplayStatics::ApplyPointDamage(
 		OtherActor,
