@@ -24,6 +24,8 @@
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Health/HealthComponent.h"
+#include "Animation/AnimInstance.h"
+#include "Animation/AnimMontage.h"
 
 
 ATPS_ShootCharacter::ATPS_ShootCharacter()
@@ -119,6 +121,11 @@ bool ATPS_ShootCharacter::IsDead() const
 	return IsValid(HealthComponent) && HealthComponent->GetIsDead();
 }
 
+bool ATPS_ShootCharacter::ShouldPlayReloadAnimation() const
+{
+	return !IsDead() && IsValid(EquippedWeapon) && EquippedWeapon->IsReloading();
+}
+
 void ATPS_ShootCharacter::HandleDeath()
 {
 	if (bDeathHandled)
@@ -131,9 +138,11 @@ void ATPS_ShootCharacter::HandleDeath()
 	if (IsValid(CombatComponent))
 	{
 		CombatComponent->StopFire();
+		CombatComponent->CancelWeaponSwitch();
 	}
-	
-	if (IsValid(EquippedWeapon))
+
+	// Keep the existing reload cancellation; only the server changes weapon state.
+	if (HasAuthority() && IsValid(EquippedWeapon))
 	{
 		EquippedWeapon->CancelReload();
 	}
@@ -143,6 +152,14 @@ void ATPS_ShootCharacter::HandleDeath()
 
 	GetCharacterMovement()->StopMovementImmediately();
 	GetCharacterMovement()->DisableMovement();
+
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	{
+		AnimInstance->StopAllMontages(0.1f);
+	}
+
+	// Each machine restores its own non-replicated magazine components.
+	OnDeathPresentation();
 }
 
 void ATPS_ShootCharacter::OnRep_EquippedWeapon()
@@ -154,6 +171,12 @@ void ATPS_ShootCharacter::OnRep_EquippedWeapon()
 	}
 
 	TryBindAmmoWidget();
+
+	// Weapon replication can arrive after the health component's death notification.
+	if (IsDead())
+	{
+		RestoreReloadVisualsOnDeath();
+	}
 }
 
 

@@ -23,6 +23,7 @@ public:
 	
 	// 对外接口：请求切换武器
 	void SwitchWeapon(int32 SlotIndex);
+	void CancelWeaponSwitch();
 
 	UFUNCTION(BlueprintPure, Category = "Combat")
 	bool IsSwitchingWeapon() const{return bIsSwitchingWeapon;}

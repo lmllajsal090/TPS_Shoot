@@ -156,6 +156,28 @@ void UCombatComponent::FinishWeaponSwitch()
 	bIsSwitchingWeapon = false;
 }
 
+void UCombatComponent::CancelWeaponSwitch()
+{
+	// Equipment and weapon visibility remain server-authoritative.
+	if (!IsValid(GetOwner()) || !GetOwner()->HasAuthority())
+	{
+		return;
+	}
+
+	// Clears all three timers, PendingWeapon, and the switching flag.
+	FinishWeaponSwitch();
+
+	// Keep whichever weapon was equipped when the switch was interrupted.
+	AWeaponBase* CurrentWeapon = GetCurrentWeapon();
+	for (AWeaponBase* Weapon : WeaponSlots)
+	{
+		if (IsValid(Weapon))
+		{
+			Weapon->SetActorHiddenInGame(Weapon != CurrentWeapon);
+		}
+	}
+}
+
 void UCombatComponent::TryFire()
 {
 	ATPS_ShootCharacter* Character =Cast<ATPS_ShootCharacter>(GetOwner());
@@ -231,6 +253,12 @@ void UCombatComponent::CommitWeaponSwitch()
 		return;
 	}
 
+	if (Character->IsDead())
+	{
+		CancelWeaponSwitch();
+		return;
+	}
+
 	if (!bIsSwitchingWeapon)
 	{
 		return;
@@ -247,6 +275,18 @@ void UCombatComponent::CommitWeaponSwitch()
 
 void UCombatComponent::HideCurrentWeapon()
 {
+	ATPS_ShootCharacter* Character = Cast<ATPS_ShootCharacter>(GetOwner());
+	if (!IsValid(Character) || !Character->HasAuthority())
+	{
+		return;
+	}
+
+	if (Character->IsDead())
+	{
+		CancelWeaponSwitch();
+		return;
+	}
+
 	AWeaponBase* CurrentWeapon = GetCurrentWeapon();
 	
 	if (IsValid(CurrentWeapon))
@@ -385,14 +425,17 @@ void UCombatComponent::MulticastPlayWeaponSwitch_Implementation(UAnimMontage* Sw
 	
 	ATPS_ShootCharacter* Character =Cast<ATPS_ShootCharacter>(GetOwner());
 
-	if (!IsValid(Character) || !IsValid(SwitchMontage))
+	if (!IsValid(Character) || Character->IsDead() || !IsValid(SwitchMontage))
 	{
 		return;
 	}
 	
 	USkeletalMeshComponent* CharacterMesh = Character->GetMesh();
-	UAnimInstance* AnimInstance = CharacterMesh->GetAnimInstance();
-	AnimInstance->Montage_Play(SwitchMontage, 1.f);
+	UAnimInstance* AnimInstance = IsValid(CharacterMesh) ? CharacterMesh->GetAnimInstance() : nullptr;
+	if (IsValid(AnimInstance))
+	{
+		AnimInstance->Montage_Play(SwitchMontage, 1.f);
+	}
 }
 
 

@@ -15,6 +15,7 @@ class UInputAction;
 class AWeaponBase;
 struct FInputActionValue;
 class UHealthComponent;
+class UAnimMontage;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -36,6 +37,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Health")
 	bool IsDead() const;
+
+	UFUNCTION(BlueprintPure, Category = "Combat|Animation")
+	bool ShouldPlayReloadAnimation() const;
 	
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoMove(float Right, float Forward);
@@ -96,6 +100,16 @@ public:
 protected:
 	UFUNCTION()
 	void HandleDeath();
+
+	// Restore Blueprint-owned magazines after combat montages are interrupted.
+	UFUNCTION(BlueprintImplementableEvent, Category = "Combat|Death")
+	void OnDeathPresentation();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Combat|Death")
+	void RestoreReloadVisualsOnDeath();
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Death")
+	TObjectPtr<UAnimMontage> DeathMontage;
 
 	// Local guard: each machine handles this character's death once.
 	bool bDeathHandled = false;
