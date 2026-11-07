@@ -38,6 +38,16 @@ AWeaponBase::AWeaponBase()
 	MuzzleFlashComponent->SetAutoActivate(false);
 }
 
+void AWeaponBase::CancelReload()
+{
+	if (GetWorld())
+	{
+		GetWorldTimerManager().ClearTimer(ReloadTimerHandle);
+	}
+	bIsReloading = false;
+	OnWeaponStateChanged.Broadcast();
+}
+
 void AWeaponBase::Fire(const FVector& AimPoint)
 {
 	if (bIsReloading||!HasAuthority())
@@ -147,8 +157,6 @@ void AWeaponBase::StartReload()
 {
 	if (!HasAuthority() || bIsReloading||CurrentAmmo>=MagazineCapacity||ReserveAmmo<=0||ReloadDuration<=0)return;
 	
-	bIsReloading=true;
-	
 	GetWorldTimerManager().SetTimer(
 	ReloadTimerHandle,
 	this,
@@ -157,6 +165,7 @@ void AWeaponBase::StartReload()
 	false
 	);
 	
+	bIsReloading=true;
 	OnWeaponStateChanged.Broadcast();
 }
 

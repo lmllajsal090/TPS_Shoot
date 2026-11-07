@@ -132,6 +132,11 @@ void ATPS_ShootCharacter::HandleDeath()
 	{
 		CombatComponent->StopFire();
 	}
+	
+	if (IsValid(EquippedWeapon))
+	{
+		EquippedWeapon->CancelReload();
+	}
 
 	bIsAiming = false;
 	ApplyAimingState();

@@ -43,6 +43,7 @@ public:
 	
 	FOnWeaponStateChanged OnWeaponStateChanged;
 	
+	void CancelReload();
 	void Fire(const FVector& AimPoint);
 	void StartReload();
 	void HandleProjectileImpact(const FHitResult& Hit);
