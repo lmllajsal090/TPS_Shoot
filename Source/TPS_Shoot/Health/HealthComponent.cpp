@@ -47,6 +47,9 @@ void UHealthComponent::InitializeHealth()
 	MaxHealth = FMath::Max(MaxHealth, 1.f);
 	CurrentHealth = MaxHealth;
 	bIsDead = false;
+
+	// The local HUD may already be observing this component before BeginPlay.
+	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 }
 
 void UHealthComponent::ApplyDamage(float Damage)

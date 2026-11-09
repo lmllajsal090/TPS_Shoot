@@ -13,8 +13,8 @@ void UUTPSMainHUD::SetObservedCharacter(ATPS_ShootCharacter* Character)
 	if (ObservedHealthComponent.IsValid())
 	{
 		ObservedHealthComponent->OnHealthChanged.RemoveDynamic(this, &UUTPSMainHUD::HandleHealthChanged);
-		ObservedHealthComponent.Reset();
 	}
+	ObservedHealthComponent.Reset();
 	
 	if (ObservedCharacter.IsValid() && EquippedWeaponChangedHandle.IsValid())
 	{
@@ -23,7 +23,7 @@ void UUTPSMainHUD::SetObservedCharacter(ATPS_ShootCharacter* Character)
 	EquippedWeaponChangedHandle.Reset();
 	ObservedCharacter = Character;
 
-	if (IsValid(StateBarWidget))
+	if (IsValid(Character))
 	{
 		EquippedWeaponChangedHandle = Character->OnEquippedWeaponChanged.AddUObject(
 			this, &UUTPSMainHUD::HandleEquippedWeaponChanged);
