@@ -8,7 +8,6 @@
 #include "TPS_ShootCharacter.generated.h"
 
 class UCombatComponent;
-class UAmmoWidget;
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
@@ -18,6 +17,8 @@ class UHealthComponent;
 class UAnimMontage;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnEquippedWeaponChanged, AWeaponBase*);
 
 /**
  *  A simple player-controllable third person character
@@ -94,6 +95,9 @@ public:
 	virtual void GetLifetimeReplicatedProps(
 	TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
+	// Local notification: authority setter and client replication both broadcast.
+	FOnEquippedWeaponChanged OnEquippedWeaponChanged;
+
 	void SetEquippedWeapon(AWeaponBase* NewWeapon);
 	
 	void ApplyRecoil(float PitchAmount, float YawRange);
@@ -149,14 +153,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> ReloadAction;
 
-	// 在角色蓝图中选择 WBP_Ammo
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UAmmoWidget> AmmoWidgetClass;
-
-	// 运行时创建的界面实例
-	UPROPERTY(Transient)
-	TObjectPtr<UAmmoWidget> AmmoWidget;
-	
 	// 开局时生成并放入备用槽的武器
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	TSubclassOf<AWeaponBase> SecondaryWeaponClass;
@@ -166,7 +162,6 @@ protected:
 	void InitializeDefaultWeapon();
 	void InitializeLocalUI();
 	
-	void TryBindAmmoWidget();
 	void RemoveLocalUI();
 	void ResetCrosshairSpread();
 	

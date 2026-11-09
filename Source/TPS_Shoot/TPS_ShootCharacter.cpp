@@ -15,7 +15,6 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/World.h"
 #include "CollisionQueryParams.h"
-#include "UI/AMmoWidget.h"
 #include "UI/CrosshairWidget.h"
 #include "GameFramework/PlayerController.h"
 #include "Net/UnrealNetwork.h"
@@ -170,7 +169,7 @@ void ATPS_ShootCharacter::OnRep_EquippedWeapon()
 		CombatComponent->StopFire();
 	}
 
-	TryBindAmmoWidget();
+	OnEquippedWeaponChanged.Broadcast(EquippedWeapon.Get());
 
 	// Weapon replication can arrive after the health component's death notification.
 	if (IsDead())
@@ -475,14 +474,15 @@ void ATPS_ShootCharacter::InitializeDefaultWeapon()
 	SpawnParams.Owner = this;
 	SpawnParams.Instigator = this;
 	
-	EquippedWeapon=GetWorld()->SpawnActor<AWeaponBase>(
+	AWeaponBase* DefaultWeapon = GetWorld()->SpawnActor<AWeaponBase>(
 		DefaultWeaponClass,
 		GetActorTransform(), 
 		SpawnParams
 		);
 	
-	if (EquippedWeapon)
+	if (IsValid(DefaultWeapon))
 	{
+		SetEquippedWeapon(DefaultWeapon);
 		EquippedWeapon->AttachToComponent(
 		GetMesh(),
 		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
@@ -529,28 +529,13 @@ void ATPS_ShootCharacter::InitializeLocalUI()
 		return;
 	}
 	
-	if (!IsValid(AmmoWidget) && AmmoWidgetClass)
-	{
-		AmmoWidget = CreateWidget<UAmmoWidget>(PC, AmmoWidgetClass);
-	}
-	if (IsValid(AmmoWidget))
-	{
-		if (!AmmoWidget->IsInViewport())
-		{
-			AmmoWidget->AddToViewport();
-		}
-		TryBindAmmoWidget();
-	}
-	
 	if (!IsValid(CrosshairWidget) && CrosshairWidgetClass)
 	{
-		CrosshairWidget =
-			CreateWidget<UUserWidget>(PC, CrosshairWidgetClass);
+		CrosshairWidget =CreateWidget<UUserWidget>(PC, CrosshairWidgetClass);
     
 		if (CrosshairWidget)
 		{
-			CrosshairWidget->SetVisibility(
-				ESlateVisibility::HitTestInvisible);
+			CrosshairWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
     
 			CrosshairWidget->AddToViewport(10);
 		}
@@ -567,21 +552,6 @@ void ATPS_ShootCharacter::DoJumpEnd()
 {
 	// signal the character to stop jumping
 	StopJumping();
-}
-
-void ATPS_ShootCharacter::TryBindAmmoWidget()
-{
-	if (!IsLocallyControlled())
-	{
-		return;
-	}
-
-	if (!IsValid(AmmoWidget))
-	{
-		return;
-	}
-
-	AmmoWidget->SetWeapon(EquippedWeapon.Get());
 }
 
 void ATPS_ShootCharacter::NotifyControllerChanged()
@@ -611,12 +581,6 @@ void ATPS_ShootCharacter::PawnClientRestart()
 
 void ATPS_ShootCharacter::RemoveLocalUI()
 {
-	if (IsValid(AmmoWidget))
-	{
-		AmmoWidget->SetWeapon(nullptr);
-		AmmoWidget->RemoveFromParent();
-		AmmoWidget = nullptr;
-	}
 	if (IsValid(CrosshairWidget))
 	{
 		CrosshairWidget->RemoveFromParent();
@@ -626,6 +590,7 @@ void ATPS_ShootCharacter::RemoveLocalUI()
 
 void ATPS_ShootCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	OnEquippedWeaponChanged.Broadcast(nullptr);
 	RemoveLocalUI();
 	Super::EndPlay(EndPlayReason);
 }
@@ -640,8 +605,8 @@ void ATPS_ShootCharacter::SetEquippedWeapon(AWeaponBase* NewWeapon)
 	EquippedWeapon = NewWeapon;
 	ResetCrosshairSpread();
 	
-	// 监听服务器主机的本地 UI 需要主动刷新。
-	TryBindAmmoWidget();
+	// Authority does not receive OnRep; notify local observers here as well.
+	OnEquippedWeaponChanged.Broadcast(EquippedWeapon.Get());
 }
 
 void ATPS_ShootCharacter::ApplyRecoil(float PitchAmount, float YawRange)

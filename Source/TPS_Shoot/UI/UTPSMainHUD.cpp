@@ -7,16 +7,33 @@
 
 void UUTPSMainHUD::SetObservedCharacter(ATPS_ShootCharacter* Character)
 {
-	if (!IsValid(AmmoWidget))
+	if (ObservedCharacter.IsValid() && EquippedWeaponChangedHandle.IsValid())
 	{
-		return;
+		ObservedCharacter->OnEquippedWeaponChanged.Remove(EquippedWeaponChangedHandle);
 	}
+	EquippedWeaponChangedHandle.Reset();
+	ObservedCharacter = Character;
 
-	AWeaponBase* Weapon = nullptr;
 	if (IsValid(Character))
 	{
-		Weapon = Character->EquippedWeapon.Get();
+		EquippedWeaponChangedHandle = Character->OnEquippedWeaponChanged.AddUObject(
+			this, &UUTPSMainHUD::HandleEquippedWeaponChanged);
 	}
 
-	AmmoWidget->SetWeapon(Weapon);
+	// Initialize immediately, even if the weapon replicated before we subscribed.
+	HandleEquippedWeaponChanged(IsValid(Character) ? Character->EquippedWeapon.Get() : nullptr);
+}
+
+void UUTPSMainHUD::HandleEquippedWeaponChanged(AWeaponBase* Weapon)
+{
+	if (IsValid(AmmoWidget))
+	{
+		AmmoWidget->SetWeapon(Weapon);
+	}
+}
+
+void UUTPSMainHUD::NativeDestruct()
+{
+	SetObservedCharacter(nullptr);
+	Super::NativeDestruct();
 }

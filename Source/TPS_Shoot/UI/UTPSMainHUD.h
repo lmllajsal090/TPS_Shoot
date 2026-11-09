@@ -7,6 +7,7 @@
 #include "UTPSMainHUD.generated.h"
 
 class ATPS_ShootCharacter;
+class AWeaponBase;
 class UCrosshairWidget;
 class UAmmoWidget;
 
@@ -24,4 +25,15 @@ public:
 
 	UFUNCTION()
 	void SetObservedCharacter(ATPS_ShootCharacter* Character);
+
+protected:
+	virtual void NativeDestruct() override;
+
+private:
+	void HandleEquippedWeaponChanged(AWeaponBase* Weapon);
+
+	UPROPERTY(Transient)
+	TWeakObjectPtr<ATPS_ShootCharacter> ObservedCharacter;
+
+	FDelegateHandle EquippedWeaponChangedHandle;
 };
