@@ -40,6 +40,7 @@ public:
 	void Heal(float HealDamage);
 	float GetCurrentHealth()const{return CurrentHealth;};
 	bool GetIsDead()const{return bIsDead;};
+	float GetMaxHealth()const{return MaxHealth;}
 private:
 	UFUNCTION()
 	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,

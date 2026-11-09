@@ -6,6 +6,8 @@
 #include "Blueprint/UserWidget.h"
 #include "UTPSMainHUD.generated.h"
 
+class UHealthComponent;
+class UUStateBarWidget;
 class ATPS_ShootCharacter;
 class AWeaponBase;
 class UCrosshairWidget;
@@ -22,10 +24,15 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UCrosshairWidget> Crosshair;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UUStateBarWidget> StateBarWidget;
 
 	UFUNCTION()
 	void SetObservedCharacter(ATPS_ShootCharacter* Character);
-
+	
+	UFUNCTION()
+	void HandleHealthChanged(float Current, float Max);
 protected:
 	virtual void NativeDestruct() override;
 
@@ -34,6 +41,9 @@ private:
 
 	UPROPERTY(Transient)
 	TWeakObjectPtr<ATPS_ShootCharacter> ObservedCharacter;
-
+	
+	UPROPERTY(Transient)
+	TWeakObjectPtr<UHealthComponent> ObservedHealthComponent;
+	
 	FDelegateHandle EquippedWeaponChangedHandle;
 };

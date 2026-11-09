@@ -3,11 +3,19 @@
 #include "UI/UTPSMainHUD.h"
 
 #include "TPS_ShootCharacter.h"
+#include "UStateBarWidget.h"
+#include "Health/HealthComponent.h"
 #include "UI/AmmoWidget.h"
 #include "UI/CrosshairWidget.h"
 
 void UUTPSMainHUD::SetObservedCharacter(ATPS_ShootCharacter* Character)
 {
+	if (ObservedHealthComponent.IsValid())
+	{
+		ObservedHealthComponent->OnHealthChanged.RemoveDynamic(this, &UUTPSMainHUD::HandleHealthChanged);
+		ObservedHealthComponent.Reset();
+	}
+	
 	if (ObservedCharacter.IsValid() && EquippedWeaponChangedHandle.IsValid())
 	{
 		ObservedCharacter->OnEquippedWeaponChanged.Remove(EquippedWeaponChangedHandle);
@@ -15,10 +23,12 @@ void UUTPSMainHUD::SetObservedCharacter(ATPS_ShootCharacter* Character)
 	EquippedWeaponChangedHandle.Reset();
 	ObservedCharacter = Character;
 
-	if (IsValid(Character))
+	if (IsValid(StateBarWidget))
 	{
 		EquippedWeaponChangedHandle = Character->OnEquippedWeaponChanged.AddUObject(
 			this, &UUTPSMainHUD::HandleEquippedWeaponChanged);
+		
+		ObservedHealthComponent=Character->FindComponentByClass<UHealthComponent>();
 	}
 
 	// Initialize immediately, even if the weapon replicated before we subscribed.
@@ -27,6 +37,25 @@ void UUTPSMainHUD::SetObservedCharacter(ATPS_ShootCharacter* Character)
 	if (IsValid(Crosshair))
 	{
 		Crosshair->SetObservedCharacter(Character);
+	}
+	
+	if (ObservedHealthComponent.IsValid())
+	{
+		ObservedHealthComponent->OnHealthChanged.AddUniqueDynamic(this,&UUTPSMainHUD::HandleHealthChanged);
+		float CurrentHealth=ObservedHealthComponent->GetCurrentHealth();
+		float MaxHealth=ObservedHealthComponent->GetMaxHealth();
+		HandleHealthChanged(CurrentHealth,MaxHealth);
+	}else
+	{
+		HandleHealthChanged(0,0);
+	}
+}
+
+void UUTPSMainHUD::HandleHealthChanged(float Current, float Max)
+{
+	if (StateBarWidget)
+	{
+		StateBarWidget->UpdateValue(Current,Max);
 	}
 }
 

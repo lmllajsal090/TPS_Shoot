@@ -18,12 +18,17 @@ class TPS_SHOOT_API UUStateBarWidget : public UUserWidget
 protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> HealthProgressBar;
-
-public:
-	UFUNCTION(BlueprintCallable)
-	void UpdateValue(float CurrentValue, float MaxValue);
 	
+	virtual void NativeConstruct() override;
+public:
+	UFUNCTION(BlueprintCallable, Category = "UI|StatBar")
+	void UpdateValue(float CurrentValue, float MaxValue);
+
+	UFUNCTION(BlueprintPure, Category = "UI|StatBar")
+	float GetPercent() const;
 private:
-	float MaxHealth;
-	float CurrentHealth;
+	void RefreshDisplay();
+	
+	float CurrentHealth = 0.f;
+	float MaxHealth= 0.f;
 };
