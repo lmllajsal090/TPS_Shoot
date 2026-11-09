@@ -19,6 +19,8 @@ class UAnimMontage;
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnEquippedWeaponChanged, AWeaponBase*);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnCrosshairShot, float, float, float);
+DECLARE_MULTICAST_DELEGATE(FOnCrosshairReset);
 
 /**
  *  A simple player-controllable third person character
@@ -67,8 +69,6 @@ public:
 	void ServerSwitchWeapon(int32 SlotIndex);
 	
 	virtual void BeginPlay() override;
-	virtual void NotifyControllerChanged() override;
-	virtual void PawnClientRestart() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
 	// 蓝图里选择开局生成哪一种武器
@@ -97,10 +97,12 @@ public:
 	
 	// Local notification: authority setter and client replication both broadcast.
 	FOnEquippedWeaponChanged OnEquippedWeaponChanged;
+	FOnCrosshairShot OnCrosshairShot;
+	FOnCrosshairReset OnCrosshairReset;
 
 	void SetEquippedWeapon(AWeaponBase* NewWeapon);
 	
-	void ApplyRecoil(float PitchAmount, float YawRange);
+	void ApplyRecoil(float PitchAmount, float YawRange) const;
 	void NotifyCrosshairShot(float SpreadPerShot, float MaximumSpread, float RecoverySpeed);
 protected:
 	UFUNCTION()
@@ -160,10 +162,7 @@ protected:
 	void Reload(const FInputActionValue& Value);
 	
 	void InitializeDefaultWeapon();
-	void InitializeLocalUI();
 	
-	void RemoveLocalUI();
-	void ResetCrosshairSpread();
 	
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -226,11 +225,6 @@ protected:
 
 	float NormalWalkSpeed = 0.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UUserWidget> CrosshairWidgetClass;
-
-	UPROPERTY(Transient)
-	TObjectPtr<UUserWidget> CrosshairWidget;
 	
 	UFUNCTION(Server, Reliable)
 	void ServerReload();

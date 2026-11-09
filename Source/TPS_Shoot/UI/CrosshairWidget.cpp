@@ -1,6 +1,8 @@
 #include "UI/CrosshairWidget.h"
 
 #include "Components/Image.h"
+#include "TPS_ShootCharacter.h"
+#include "TPSWeapon/WeaponBase.h"
 
 void UCrosshairWidget::NativeConstruct()
 {
@@ -14,14 +16,52 @@ void UCrosshairWidget::NativeConstruct()
 	CacheElement(CrosshairLeftOutline, FVector2D(-1.f, 0.f));
 	CacheElement(CrosshairRight, FVector2D(1.f, 0.f));
 	CacheElement(CrosshairRightOutline, FVector2D(1.f, 0.f));
-	ResetSpread();
+	HandleCrosshairReset();
 }
 
 void UCrosshairWidget::NativeDestruct()
 {
-	ResetSpread();
+	SetObservedCharacter(nullptr);
 	MovingElements.Reset();
 	Super::NativeDestruct();
+}
+
+void UCrosshairWidget::SetObservedCharacter(ATPS_ShootCharacter* Character)
+{
+	if (ObservedCharacter.IsValid())
+	{
+		ObservedCharacter->OnCrosshairShot.Remove(ShotHandle);
+		ObservedCharacter->OnCrosshairReset.Remove(ResetHandle);
+		ObservedCharacter->OnEquippedWeaponChanged.Remove(EquippedWeaponChangedHandle);
+	}
+	ShotHandle.Reset();
+	ResetHandle.Reset();
+	EquippedWeaponChangedHandle.Reset();
+	ObservedCharacter = Character;
+
+	if (IsValid(Character))
+	{
+		ShotHandle = Character->OnCrosshairShot.AddUObject(this, &UCrosshairWidget::NotifyShot);
+		ResetHandle = Character->OnCrosshairReset.AddUObject(this, &UCrosshairWidget::HandleCrosshairReset);
+		EquippedWeaponChangedHandle = Character->OnEquippedWeaponChanged.AddUObject(
+			this, &UCrosshairWidget::HandleEquippedWeaponChanged);
+	}
+
+	HandleCrosshairReset();
+}
+
+void UCrosshairWidget::HandleEquippedWeaponChanged(AWeaponBase* Weapon)
+{
+	ResetSpread();
+	const bool bShowCrosshair = IsValid(Weapon) && ObservedCharacter.IsValid() &&
+		!ObservedCharacter->IsDead();
+	SetVisibility(bShowCrosshair ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+}
+
+void UCrosshairWidget::HandleCrosshairReset()
+{
+	HandleEquippedWeaponChanged(ObservedCharacter.IsValid()
+		? ObservedCharacter->EquippedWeapon.Get() : nullptr);
 }
 
 void UCrosshairWidget::CacheElement(UWidget* Widget, const FVector2D& Direction)

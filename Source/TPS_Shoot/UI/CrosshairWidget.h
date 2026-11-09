@@ -5,6 +5,8 @@
 #include "CrosshairWidget.generated.h"
 
 class UImage;
+class ATPS_ShootCharacter;
+class AWeaponBase;
 
 UCLASS()
 class TPS_SHOOT_API UCrosshairWidget : public UUserWidget
@@ -12,6 +14,8 @@ class TPS_SHOOT_API UCrosshairWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	void SetObservedCharacter(ATPS_ShootCharacter* Character);
+
 	UFUNCTION(BlueprintCallable, Category = "Crosshair")
 	void NotifyShot(float SpreadPerShot, float MaximumSpread, float RecoverySpeed);
 
@@ -63,4 +67,13 @@ private:
 
 	void CacheElement(UWidget* Widget, const FVector2D& Direction);
 	void ApplySpread();
+	void HandleEquippedWeaponChanged(AWeaponBase* Weapon);
+	void HandleCrosshairReset();
+
+	UPROPERTY(Transient)
+	TWeakObjectPtr<ATPS_ShootCharacter> ObservedCharacter;
+
+	FDelegateHandle ShotHandle;
+	FDelegateHandle ResetHandle;
+	FDelegateHandle EquippedWeaponChangedHandle;
 };

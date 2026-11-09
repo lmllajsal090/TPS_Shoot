@@ -4,6 +4,7 @@
 
 #include "TPS_ShootCharacter.h"
 #include "UI/AmmoWidget.h"
+#include "UI/CrosshairWidget.h"
 
 void UUTPSMainHUD::SetObservedCharacter(ATPS_ShootCharacter* Character)
 {
@@ -22,6 +23,11 @@ void UUTPSMainHUD::SetObservedCharacter(ATPS_ShootCharacter* Character)
 
 	// Initialize immediately, even if the weapon replicated before we subscribed.
 	HandleEquippedWeaponChanged(IsValid(Character) ? Character->EquippedWeapon.Get() : nullptr);
+
+	if (IsValid(Crosshair))
+	{
+		Crosshair->SetObservedCharacter(Character);
+	}
 }
 
 void UUTPSMainHUD::HandleEquippedWeaponChanged(AWeaponBase* Weapon)

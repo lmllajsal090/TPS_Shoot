@@ -15,10 +15,8 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/World.h"
 #include "CollisionQueryParams.h"
-#include "UI/CrosshairWidget.h"
 #include "GameFramework/PlayerController.h"
 #include "Net/UnrealNetwork.h"
-#include "Blueprint/UserWidget.h"
 #include "Combat/CombatComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
@@ -87,10 +85,6 @@ void ATPS_ShootCharacter::BeginPlay()
 		InitializeDefaultWeapon();
 	}
 
-	if (IsLocallyControlled())
-	{
-		InitializeLocalUI();
-	}
 	
 	if (HasAuthority() && IsValid(EquippedWeapon))
 	{
@@ -133,6 +127,7 @@ void ATPS_ShootCharacter::HandleDeath()
 	}
 
 	bDeathHandled = true;
+	OnCrosshairReset.Broadcast();
 
 	if (IsValid(CombatComponent))
 	{
@@ -163,7 +158,6 @@ void ATPS_ShootCharacter::HandleDeath()
 
 void ATPS_ShootCharacter::OnRep_EquippedWeapon()
 {
-	ResetCrosshairSpread();
 	if (IsValid(CombatComponent))
 	{
 		CombatComponent->StopFire();
@@ -520,28 +514,6 @@ void ATPS_ShootCharacter::InitializeDefaultWeapon()
 	}
 }
 
-void ATPS_ShootCharacter::InitializeLocalUI()
-{
-	APlayerController* PC =Cast<APlayerController>(GetController());
-
-	if (!PC || !PC->IsLocalController())
-	{
-		return;
-	}
-	
-	if (!IsValid(CrosshairWidget) && CrosshairWidgetClass)
-	{
-		CrosshairWidget =CreateWidget<UUserWidget>(PC, CrosshairWidgetClass);
-    
-		if (CrosshairWidget)
-		{
-			CrosshairWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
-    
-			CrosshairWidget->AddToViewport(10);
-		}
-	}
-}
-
 void ATPS_ShootCharacter::DoJumpStart()
 {
 	// signal the character to jump
@@ -554,44 +526,9 @@ void ATPS_ShootCharacter::DoJumpEnd()
 	StopJumping();
 }
 
-void ATPS_ShootCharacter::NotifyControllerChanged()
-{
-	Super::NotifyControllerChanged();
-	if (HasActorBegunPlay())
-	{
-		if (IsLocallyControlled())
-		{
-			InitializeLocalUI();
-		}
-		else
-		{
-			RemoveLocalUI();
-		}
-	}
-}
-
-void ATPS_ShootCharacter::PawnClientRestart()
-{
-	Super::PawnClientRestart();
-	if (HasActorBegunPlay() && IsLocallyControlled())
-	{
-		InitializeLocalUI();
-	}
-}
-
-void ATPS_ShootCharacter::RemoveLocalUI()
-{
-	if (IsValid(CrosshairWidget))
-	{
-		CrosshairWidget->RemoveFromParent();
-		CrosshairWidget = nullptr;
-	}
-}
-
 void ATPS_ShootCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	OnEquippedWeaponChanged.Broadcast(nullptr);
-	RemoveLocalUI();
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -603,13 +540,12 @@ void ATPS_ShootCharacter::SetEquippedWeapon(AWeaponBase* NewWeapon)
 	}
 
 	EquippedWeapon = NewWeapon;
-	ResetCrosshairSpread();
 	
 	// Authority does not receive OnRep; notify local observers here as well.
 	OnEquippedWeaponChanged.Broadcast(EquippedWeapon.Get());
 }
 
-void ATPS_ShootCharacter::ApplyRecoil(float PitchAmount, float YawRange)
+void ATPS_ShootCharacter::ApplyRecoil(float PitchAmount, float YawRange) const
 {
 	if (!IsLocallyControlled())
 	{
@@ -673,21 +609,8 @@ void ATPS_ShootCharacter::ServerSwitchWeapon_Implementation(int32 SlotIndex)
 
 void ATPS_ShootCharacter::NotifyCrosshairShot(float SpreadPerShot, float MaximumSpread, float RecoverySpeed)
 {
-	if (!IsLocallyControlled())
+	if (IsLocallyControlled() && !IsDead())
 	{
-		return;
-	}
-
-	if (UCrosshairWidget* Widget = Cast<UCrosshairWidget>(CrosshairWidget))
-	{
-		Widget->NotifyShot(SpreadPerShot, MaximumSpread, RecoverySpeed);
-	}
-}
-
-void ATPS_ShootCharacter::ResetCrosshairSpread()
-{
-	if (UCrosshairWidget* Widget = Cast<UCrosshairWidget>(CrosshairWidget))
-	{
-		Widget->ResetSpread();
+		OnCrosshairShot.Broadcast(SpreadPerShot, MaximumSpread, RecoverySpeed);
 	}
 }
