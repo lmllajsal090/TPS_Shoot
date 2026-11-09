@@ -6,21 +6,22 @@
 #include "Blueprint/UserWidget.h"
 #include "UTPSMainHUD.generated.h"
 
+class ATPS_ShootCharacter;
 class UCrosshairWidget;
 class UAmmoWidget;
-/**
- * 
- */
+
 UCLASS()
 class TPS_SHOOT_API UUTPSMainHUD : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 public:
-	
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UAmmoWidget>AmmoWidget;
-	
+	TObjectPtr<UAmmoWidget> AmmoWidget;
+
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UCrosshairWidget>Crosshair;
+	TObjectPtr<UCrosshairWidget> Crosshair;
+
+	UFUNCTION()
+	void SetObservedCharacter(ATPS_ShootCharacter* Character);
 };
