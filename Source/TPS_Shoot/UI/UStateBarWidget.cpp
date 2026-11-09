@@ -10,7 +10,7 @@ void UUStateBarWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	
-	RefreshDisplay();
+	RefreshDisplay(true);
 }
 
 
@@ -20,7 +20,9 @@ void UUStateBarWidget::UpdateValue(float CurrentValue, float MaxValue)
 
 	CurrentHealth = FMath::Clamp(CurrentValue, 0.f, MaxHealth);
 
-	RefreshDisplay();
+	const bool bImmediate = !bHasValidValue || MaxHealth <= 0.f;
+	bHasValidValue = MaxHealth > 0.f;
+	RefreshDisplay(bImmediate);
 }
 
 float UUStateBarWidget::GetPercent() const
@@ -33,10 +35,15 @@ float UUStateBarWidget::GetPercent() const
 	return FMath::Clamp(CurrentHealth / MaxHealth,0.f,1.f);
 }
 
-void UUStateBarWidget::RefreshDisplay()
+void UUStateBarWidget::RefreshDisplay(bool bImmediate)
+{
+	OnPercentChanged(GetPercent(), bImmediate);
+}
+
+void UUStateBarWidget::OnPercentChanged_Implementation(float TargetPercent, bool bImmediate)
 {
 	if (IsValid(HealthProgressBar))
 	{
-		HealthProgressBar->SetPercent(GetPercent());
+		HealthProgressBar->SetPercent(TargetPercent);
 	}
 }
