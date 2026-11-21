@@ -92,8 +92,7 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	virtual void GetLifetimeReplicatedProps(
-	TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	// Local notification: authority setter and client replication both broadcast.
 	FOnEquippedWeaponChanged OnEquippedWeaponChanged;
@@ -162,12 +161,9 @@ protected:
 	void Reload(const FInputActionValue& Value);
 	
 	void InitializeDefaultWeapon();
-	
-	
+
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-
 	
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
