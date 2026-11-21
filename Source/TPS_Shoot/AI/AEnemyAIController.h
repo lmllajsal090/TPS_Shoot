@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "Perception/AIPerceptionTypes.h"
 #include "AEnemyAIController.generated.h"
 
-class ATPS_ShootCharacter;
 class UBehaviorTreeComponent;
 class UBehaviorTree;
 /**
@@ -28,7 +28,9 @@ protected:
 	TObjectPtr<UBehaviorTree>BehaviorTree;
 	
 	virtual void OnPossess(APawn* InPawn) override;
-	
-	UPROPERTY()
-	TObjectPtr<ATPS_ShootCharacter>TargetActor;
+	virtual void OnUnPossess() override;
+
+private:
+	UFUNCTION()
+	void HandleSightUpdated(AActor* Actor, FAIStimulus Stimulus);
 };
