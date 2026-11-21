@@ -15,6 +15,7 @@
 namespace
 {
 	const FName TargetActorKey(TEXT("TargetActor"));
+	const FName DistanceKey(TEXT("Distance"));
 }
 
 AAEnemyAIController::AAEnemyAIController()
@@ -26,9 +27,9 @@ AAEnemyAIController::AAEnemyAIController()
 
 	UAIPerceptionComponent* Perception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("Perception"));
 	UAISenseConfig_Sight* SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
-	SightConfig->SightRadius = 1500.0f;
-	SightConfig->LoseSightRadius = 1800.0f;
-	SightConfig->PeripheralVisionAngleDegrees = 70.0f;
+	SightConfig->SightRadius = SightRadius;
+	SightConfig->LoseSightRadius = LoseSightRadius;
+	SightConfig->PeripheralVisionAngleDegrees = PeripheralVisionAngle;
 	SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
 
 	Perception->ConfigureSense(*SightConfig);
@@ -74,6 +75,11 @@ void AAEnemyAIController::HandleSightUpdated(AActor* Actor, FAIStimulus Stimulus
 		if (!IsValid(CurrentTarget) || CurrentTarget->IsDead())
 		{
 			BlackboardComponent->SetValueAsObject(TargetActorKey, Player);
+		}
+		if (IsValid(CurrentTarget) && !CurrentTarget->IsDead())
+		{
+			const float Dis=GetPawn()->GetDistanceTo(Player);
+			BlackboardComponent->SetValueAsFloat(DistanceKey,Dis);
 		}
 	}
 	else if (CurrentTarget == Player)

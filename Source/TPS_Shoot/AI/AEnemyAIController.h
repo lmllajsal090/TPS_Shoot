@@ -26,6 +26,15 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="AI|Tree")
 	TObjectPtr<UBehaviorTree>BehaviorTree;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI|Perception")
+	float SightRadius = 1500.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI|Perception")
+	float LoseSightRadius = 1800.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI|Perception")
+	float PeripheralVisionAngle = 70.0f;
 	
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
