@@ -74,12 +74,8 @@ void AAEnemyAIController::HandleSightUpdated(AActor* Actor, FAIStimulus Stimulus
 	{
 		if (!IsValid(CurrentTarget) || CurrentTarget->IsDead())
 		{
+			BlackboardComponent->SetValueAsFloat(DistanceKey, Enemy->GetDistanceTo(Player));
 			BlackboardComponent->SetValueAsObject(TargetActorKey, Player);
-		}
-		if (IsValid(CurrentTarget) && !CurrentTarget->IsDead())
-		{
-			const float Dis=GetPawn()->GetDistanceTo(Player);
-			BlackboardComponent->SetValueAsFloat(DistanceKey,Dis);
 		}
 	}
 	else if (CurrentTarget == Player)
