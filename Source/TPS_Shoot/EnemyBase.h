@@ -26,7 +26,7 @@ protected:
 	UFUNCTION()
 	void HandleDeath();
 	
-	bool bDeathHandled;
+	bool bDeathHandled=false;
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat|Death")
 	void OnDeathPresentation();
