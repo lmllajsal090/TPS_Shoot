@@ -10,6 +10,7 @@ public class TPS_Shoot : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new string[] {
 			"AIModule",
+			"GameplayTasks",
 			"Core",
 			"CoreUObject",
 			"Engine",
