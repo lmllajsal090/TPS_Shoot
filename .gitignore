@@ -48,3 +48,9 @@ Desktop.ini
 *.bak
 *~
 /*.slnx
+
+# Optional third-party content installed locally
+/Content/BloodPack/
+
+# Local-only assets and scratch maps. Keep shared gameplay assets outside this folder.
+/Content/LocalOnly/
