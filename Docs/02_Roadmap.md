@@ -74,5 +74,5 @@
 
 ### 工程卫生小清理（按需穿插）
 - [ ] 清理 `Config/DefaultEngine.ini` 重复配置行与旧的 `F:/TPS/MCPRepair/start_unreal_mcp.py` 路径
-- [ ] 为仓库补齐 `.gitattributes`（Git LFS 托管 `.uasset` / `.umap`）
+- [x] 为仓库补齐 `.gitattributes`（Git LFS 托管 `.uasset` / `.umap`）
 - [ ] 统一 `UI/AMmoWidget.h` 文件名大小写为 `AmmoWidget.h`

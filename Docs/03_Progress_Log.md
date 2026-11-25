@@ -23,6 +23,7 @@
   2. 明确核心玩法定位：**可联机 TPS 类《三角洲行动》搜-打-撤模式**（第一关目标「非洲之星」+ 撤离点倒计时守点结算）。
   3. 明确核心亮点优先级：**联机同步与网络优化（第一核心）** > **高扩展敌人框架与远程 AI（第二核心）** > **小刀 3 号槽与极简 UI/3C**。
   4. 建立完整文档体系：`README.md`、`AGENTS.md`（内置「新增功能必同步更新 Markdown」强约束）、`Docs/01_Architecture.md`、`Docs/02_Roadmap.md`、`Docs/03_Progress_Log.md`、`Docs/Specs/_TEMPLATE.md` 及 4 份核心 Spec 草案。
+  5. 补齐仓库根目录 `.gitattributes`，将 `*.uasset` 与 `*.umap` 纳入 Git LFS 托管。
 
 ---
 
