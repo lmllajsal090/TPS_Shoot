@@ -76,4 +76,4 @@ AAEnemyAIController (Sight 感知 / NotifyDamagedBy 受击索敌 + 仇恨防抖)
 - **玩家与模式**：`BP_ThirdPersonGameMode`、`BP_ThirdPersonPlayerController`、`BP_TrooperPlayer_Polished`、`ABP_TPS_CoherentAimCalibration`
 - **敌人与 AI**：`BP_EnemyBase`、`BP_Whisper`、`ABP_EnemyBase`、`ABP_Whisper`、`AIC_EnemyController`、`BB_Enemy`、`BT_Enemy`、`BTS_UpdateTargetDistance`、`BTT_SetMoveSpeed`、`BTT_WhisperAttack`、`Data/DA_WhisperCombatConfig`
 - **UI**：`BP_TpsHUD`、`WBP_MainHUD`、`WBP_AimStar`、`WBP_Ammo`、`WBP_StateWidget`
-- **其他资源目录**：`Weapons/`、`Weapons_Free/`、`M1911/`、`TPS_Trooper/`、`SciFITrooper_Man_03/`、`Whisper/`、`FX/`、`Audio/`、`Target/`
+- **其他资源目录**：`BloodPack/`（Niagara 受击血液特效包）、`Weapons/`、`Weapons_Free/`、`M1911/`、`TPS_Trooper/`、`SciFITrooper_Man_03/`、`Whisper/`、`FX/`、`Audio/`、`Target/`

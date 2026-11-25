@@ -63,6 +63,7 @@
   - 重构 `UCombatComponent::SwitchWeapon` 硬编码 `switch`，改为由武器配置驱动切枪 Montage 与时间节点
   - 新增 3 号槽位「小刀（Knife）」：近战扇形/胶囊挥砍判定 + **切刀跑图移速加成**（贴合三角洲跑图撤离手感）
 - [ ] **M5.2 极简高收益战斗反馈与续航**
+  - 受击反馈系统（`UHealthComponent` 统一伤害事件 + `UHitFeedbackComponent` + `UHitFeedbackConfig` DataAsset，覆盖玩家与敌人，见 [05_Hit_Feedback_System.md](Specs/05_Hit_Feedback_System.md)）
   - 爆头部位伤害倍率（`Hit.BoneName`）+ **Hitmarker 准星命中/爆头/击杀反馈**
   - 简易弹药/医疗补给拾取点（保证搜打撤全程续航不卡弹）
   - 角色 3C 机动动作（视进度加冲刺 Sprint / 翻滚闪避 Dodge）

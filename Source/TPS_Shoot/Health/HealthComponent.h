@@ -6,13 +6,27 @@
 #include "Components/ActorComponent.h"
 #include "HealthComponent.generated.h"
 
-
+USTRUCT(BlueprintType)
+struct TPS_SHOOT_API FDamageTakenEvent
+{
+	GENERATED_BODY()
+	
+	float Damage;
+	FVector HitLocation;
+	FVector HitNormal;
+	FName HitBoneName;
+	TWeakObjectPtr<AController> InstigatedBy ;
+	TWeakObjectPtr<AActor> DamageCauser;
+	bool bHasHitInfo;
+	bool bIsHeadshot ;
+	bool bIsFatal;
+};
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TPS_SHOOT_API UHealthComponent : public UActorComponent
 {
 	GENERATED_BODY()
-
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChanged, float, NewHealth, float, MaxHealth);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDamageTaken, FDamageTakenEvent, DamageEvent);
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
 public:	
 	// Sets default values for this component's properties
@@ -36,7 +50,11 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Health")
 	FOnDeath OnDeath;
 	
-	void ApplyDamage(float Damage);
+	// 受伤事件
+	UPROPERTY(BlueprintAssignable, Category = "Health")
+	FOnDamageTaken OnDamageTaken;
+	
+	void ApplyDamageInternal(float Damage , FDamageTakenEvent Event);
 	void Heal(float HealDamage);
 	float GetCurrentHealth()const{return CurrentHealth;};
 	bool GetIsDead()const{return bIsDead;};
@@ -44,7 +62,12 @@ public:
 private:
 	UFUNCTION()
 	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
-	AController* InstigatedBy, AActor* DamageCauser);
+		AController* InstigatedBy, AActor* DamageCauser);
+	
+	UFUNCTION()
+	void HandleTakePointDamage(AActor* DamagedActor, float Damage, AController* InstigatedBy,
+		FVector HitLocation, UPrimitiveComponent* FHitComponent, FName BoneName,
+		FVector ShotFromDirection, const UDamageType* DamageType, AActor* DamageCauser);
 	
 	UPROPERTY(ReplicatedUsing = OnRep_HealthValues)
 	float CurrentHealth=0;
@@ -57,4 +80,23 @@ private:
 
 	UFUNCTION()
 	void OnRep_IsDead();
+	
+	/** 仅用于在同一次 TakeDamage 调用中，将 OnTakePointDamage 的命中信息传递给 OnTakeAnyDamage */
+	struct FPendingPointHit
+	{
+		bool bValid = false;
+		FVector HitLocation = FVector::ZeroVector;
+		FVector HitNormal = FVector::UpVector;
+		FName BoneName = NAME_None;
+		void Reset()
+		{
+			bValid = false;
+			HitLocation = FVector::ZeroVector;
+			HitNormal = FVector::UpVector;
+			BoneName = NAME_None;
+		}
+	};
+	
+	FPendingPointHit PendingPointHit;
+	
 };

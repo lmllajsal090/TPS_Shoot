@@ -57,6 +57,7 @@ flowchart LR
   - [02 - 联机体验与网络带宽优化专项](Docs/Specs/02_Multiplayer_And_Network_Optimization.md)
   - [03 - 高扩展敌人战斗框架与远程 AI](Docs/Specs/03_Extensible_Enemy_And_Ranged_AI.md)
   - [04 - 近战小刀（3号槽）、战斗反馈与 3C 动作](Docs/Specs/04_Knife_Weapon_And_3C_Polish.md)
+  - [05 - 受击反馈系统（Hit Feedback）](Docs/Specs/05_Hit_Feedback_System.md)
 
 ---
 

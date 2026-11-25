@@ -24,6 +24,7 @@
   3. 明确核心亮点优先级：**联机同步与网络优化（第一核心）** > **高扩展敌人框架与远程 AI（第二核心）** > **小刀 3 号槽与极简 UI/3C**。
   4. 建立完整文档体系：`README.md`、`AGENTS.md`（内置「新增功能必同步更新 Markdown」强约束）、`Docs/01_Architecture.md`、`Docs/02_Roadmap.md`、`Docs/03_Progress_Log.md`、`Docs/Specs/_TEMPLATE.md` 及 4 份核心 Spec 草案。
   5. 补齐仓库根目录 `.gitattributes`，将 `*.uasset` 与 `*.umap` 纳入 Git LFS 托管。
+  6. 完成受击反馈系统架构设计定稿（`Docs/Specs/05_Hit_Feedback_System.md`）：选定 `UHealthComponent` 统一收口伤害上下文 + `UHitFeedbackComponent` + `UHitFeedbackConfig`（DataAsset）解耦方案（ADR-005）。
 
 ---
 
@@ -45,3 +46,8 @@
 ### ADR-004：强制推行 Living Documentation（新增功能必同步更新 Markdown）
 - **背景**：项目将由 Antigravity 与本地 GPT Agent 双 AI 协作推进，代码高频演进易导致文档失真。
 - **决策**：将“每新增一个功能必须同步更新 `Docs/` 对应 Markdown 文档”写入 `AGENTS.md` 硬性规范，确保跨 AI 零漂移与面试复盘素材实时沉淀。
+
+### ADR-005：受击反馈采用「HealthComponent 统一伤害管道 + 独立 HitFeedbackComponent + DataAsset」
+- **背景**：需同时覆盖玩家与敌人的受击特效，并兼顾后续爆头倍率、击杀强化特效、Hitmarker 与联机带宽控制。
+- **决策**：由 `UHealthComponent` 通过 `OnTakePointDamage`（缓存命中点）+ `OnTakeAnyDamage`（单次扣血消费）统一收口并广播 `OnDamageTaken`；独立的 `UHitFeedbackComponent` 订阅该事件，经服务端频控节流后用 `Unreliable` Multicast（压缩坐标/法线 + 1 字节 `HitFlags`）读取 `UHitFeedbackConfig` DataAsset 播特效。
+- **结果**：彻底杜绝双倍扣血，数值与表现零耦合，所有伤害来源自动复用，网络包体极小。
