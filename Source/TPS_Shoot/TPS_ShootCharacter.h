@@ -14,6 +14,7 @@ class UInputAction;
 class AWeaponBase;
 struct FInputActionValue;
 class UHealthComponent;
+class UHitFeedbackComponent;
 class UAnimMontage;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -40,6 +41,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Health")
 	bool IsDead() const;
+
+	UFUNCTION(BlueprintPure, Category = "HitFeedback")
+	UHitFeedbackComponent* GetHitFeedbackComponent() const { return HitFeedbackComponent; }
 
 	UFUNCTION(BlueprintPure, Category = "Combat|Animation")
 	bool ShouldPlayReloadAnimation() const;
@@ -122,6 +126,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UHealthComponent> HealthComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UHitFeedbackComponent> HitFeedbackComponent;
 	
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))

@@ -6,6 +6,7 @@
 #include "AI/AEnemyAIController.h"
 #include "Combat/EnemyCombatComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Effect/HitFeedbackComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Health/HealthComponent.h"
 
@@ -17,6 +18,7 @@ AEnemyBase::AEnemyBase()
 
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 	CombatComponent = CreateDefaultSubobject<UEnemyCombatComponent>(TEXT("CombatComponent"));
+	HitFeedbackComponent = CreateDefaultSubobject<UHitFeedbackComponent>(TEXT("HitFeedbackComponent"));
 }
 
 // Called when the game starts or when spawned

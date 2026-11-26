@@ -27,10 +27,10 @@ void UHealthComponent::BeginPlay()
 
 	InitializeHealth();
 
-	OwnerActor->OnTakeAnyDamage.AddUniqueDynamic(
+	OwnerActor->OnTakePointDamage.AddUniqueDynamic(
 		this,
-		&UHealthComponent::HandleTakeAnyDamage);
-	
+		&UHealthComponent::HandleTakePointDamage);
+
 	OwnerActor->OnTakeAnyDamage.AddUniqueDynamic(
 		this,
 		&UHealthComponent::HandleTakeAnyDamage);
@@ -56,6 +56,18 @@ void UHealthComponent::InitializeHealth()
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 }
 
+
+void UHealthComponent::ApplyDamage(float Damage)
+{
+	FDamageTakenEvent Event;
+	Event.Damage = Damage;
+	Event.bHasHitInfo = false;
+	if (const AActor* OwnerActor = GetOwner())
+	{
+		Event.HitLocation = OwnerActor->GetActorLocation();
+	}
+	ApplyDamageInternal(Damage, Event);
+}
 
 void UHealthComponent::ApplyDamageInternal(float Damage, FDamageTakenEvent Event)
 {

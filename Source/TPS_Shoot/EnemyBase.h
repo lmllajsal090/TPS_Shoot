@@ -8,6 +8,7 @@
 
 class UEnemyCombatComponent;
 class UHealthComponent;
+class UHitFeedbackComponent;
 
 UCLASS()
 class TPS_SHOOT_API AEnemyBase : public ACharacter
@@ -28,6 +29,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UEnemyCombatComponent> CombatComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UHitFeedbackComponent> HitFeedbackComponent;
+
 	UFUNCTION()
 	void HandleDeath();
 
@@ -46,4 +50,7 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Combat")
 	UEnemyCombatComponent* GetCombatComponent() const { return CombatComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "HitFeedback")
+	UHitFeedbackComponent* GetHitFeedbackComponent() const { return HitFeedbackComponent; }
 };

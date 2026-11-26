@@ -1,6 +1,6 @@
 # Spec + TDD 05：受击反馈系统（Hit Feedback System）
 
-> **状态**：`[Approved — 待实现]`
+> **状态**：`[Implemented — C++ 已实现并验证，待编辑器配置 DataAsset 与双端 PIE 验收]`
 > **所属阶段**：Phase 5 / 战斗反馈前置落地（覆盖玩家 `ATPS_ShootCharacter` 与敌人 `AEnemyBase`）
 > **架构决策**：采用「`UHealthComponent` 统一收口伤害上下文 + 独立 `UHitFeedbackComponent` + `UHitFeedbackConfig` DataAsset」分层解耦方案。
 
@@ -60,7 +60,7 @@ flowchart LR
 - 新增原生多播委托：`FOnDamageTaken OnDamageTaken;`（仅服务端在有效扣血后广播）
 - 私有缓存：`FPendingPointHit PendingPointHit;`（`HandleTakePointDamage` 写入，`HandleTakeAnyDamage` 消费并重置）
 
-### 4.2 新增 `UHitFeedbackConfig`（`Source/TPS_Shoot/Combat/HitFeedbackConfig.h`）
+### 4.2 新增 `UHitFeedbackConfig`（`Source/TPS_Shoot/Effect/HitFeedbackConfig.h`）
 继承 `UDataAsset`：
 - `TObjectPtr<UNiagaraSystem> DefaultHitVFX`
 - `TObjectPtr<UNiagaraSystem> HeadshotHitVFX`（留空则回退 `DefaultHitVFX`）
@@ -73,7 +73,7 @@ flowchart LR
 - `float MinFeedbackInterval = 0.05f`（高频集火/霰弹防刷屏节流间隔）
 - `#if WITH_EDITOR`: 重写 `IsDataValid` 检查是否至少配置了 VFX 或 Sound
 
-### 4.3 新增 `UHitFeedbackComponent`（`Source/TPS_Shoot/Combat/HitFeedbackComponent.h`）
+### 4.3 新增 `UHitFeedbackComponent`（`Source/TPS_Shoot/Effect/HitFeedbackComponent.h`）
 继承 `UActorComponent`（`SetIsReplicatedByDefault(true)`，`bCanEverTick = false`）：
 - `UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HitFeedback") TObjectPtr<UHitFeedbackConfig> FeedbackConfig;`
 - 服务端 `BeginPlay`：查找宿主 `UHealthComponent`，订阅 `OnDamageTaken`。

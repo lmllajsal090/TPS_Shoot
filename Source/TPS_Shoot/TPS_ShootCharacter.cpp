@@ -21,6 +21,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Health/HealthComponent.h"
+#include "Effect/HitFeedbackComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
 
@@ -66,7 +67,8 @@ ATPS_ShootCharacter::ATPS_ShootCharacter()
 	FollowCamera->FieldOfView = 85.f;
 	
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
-	HealthComponent =CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+	HitFeedbackComponent = CreateDefaultSubobject<UHitFeedbackComponent>(TEXT("HitFeedbackComponent"));
 }
 
 void ATPS_ShootCharacter::BeginPlay()

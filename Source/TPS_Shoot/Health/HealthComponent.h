@@ -10,16 +10,30 @@ USTRUCT(BlueprintType)
 struct TPS_SHOOT_API FDamageTakenEvent
 {
 	GENERATED_BODY()
-	
-	float Damage;
-	FVector HitLocation;
-	FVector HitNormal;
-	FName HitBoneName;
-	TWeakObjectPtr<AController> InstigatedBy ;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Health|Damage")
+	float Damage = 0.f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Health|Damage")
+	FVector HitLocation = FVector::ZeroVector;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Health|Damage")
+	FVector HitNormal = FVector::UpVector;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Health|Damage")
+	FName HitBoneName = NAME_None;
+
+	TWeakObjectPtr<AController> InstigatedBy;
 	TWeakObjectPtr<AActor> DamageCauser;
-	bool bHasHitInfo;
-	bool bIsHeadshot ;
-	bool bIsFatal;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Health|Damage")
+	bool bHasHitInfo = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Health|Damage")
+	bool bIsHeadshot = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Health|Damage")
+	bool bIsFatal = false;
 };
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TPS_SHOOT_API UHealthComponent : public UActorComponent
@@ -54,7 +68,8 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Health")
 	FOnDamageTaken OnDamageTaken;
 	
-	void ApplyDamageInternal(float Damage , FDamageTakenEvent Event);
+	void ApplyDamage(float Damage);
+	void ApplyDamageInternal(float Damage, FDamageTakenEvent Event);
 	void Heal(float HealDamage);
 	float GetCurrentHealth()const{return CurrentHealth;};
 	bool GetIsDead()const{return bIsDead;};

@@ -7,15 +7,22 @@
 
 ## 当前状态与下一步（Next Session Entry Point）
 
-- **当前阶段**：Phase 1 完成，已敲定 3 月前旗舰 Demo 总规划与跨 AI 文档底座
-- **工作区现状**：`upgrade/ue5.8` 分支，当前有未提交的 `BP_Whisper` / `BT_Enemy` / `DA_WhisperCombatConfig` 等敌人战斗配置改动
+- **当前阶段**：受击反馈系统（Spec 05）C++ 层已完整落地，待在 UE 编辑器中配置 `DA_WhisperHitFeedback` / `DA_PlayerHitFeedback` 并做双端 PIE 验收
 - **下一步建议**：
-  1. 确认并提交当前工作区的敌人战斗蓝图与本次新增文档底座。
-  2. 决定先启动 **Phase 2（搜打撤闭环：非洲之星 + 撤离点）** 还是先攻克 **Phase 3（联机开火先行 + 弹道/带宽优化专项）**，并在 **Mode A** 下逐项定稿对应 Spec 后开工。
+  1. 在 UE 编辑器中创建 `UHitFeedbackConfig` DataAsset（挂载 `BloodPack` Niagara 与音效），分别填入 `BP_Whisper` 与 `BP_TrooperPlayer_Polished` 的 `HitFeedbackComponent->FeedbackConfig`，并跑 2 Players Listen Server PIE 验收。
+  2. 决定下一阶段启动 **Phase 2（搜打撤闭环：非洲之星 + 撤离点）** 还是 **Phase 3（联机开火先行 + 弹道/带宽优化专项）**。
 
 ---
 
 ## 变更日志（Changelog）
+
+### 2026-11-26 — 受击反馈系统（Spec 05）C++ 实现、命名修正与 HealthComponent Bug 修复
+- **完成内容**：
+  1. **规范化 `HitFeedbackConfig`**：将 `Effect/UHitFeedbackConfig.h/.cpp` 重命名为 `Effect/HitFeedbackConfig.h/.cpp`，类名由 `UUHitFeedbackConfig` 修正为 `UHitFeedbackConfig`；补充 `UCLASS(BlueprintType)`、`FatalHitVFX` 字段，并修复 `IsDataValid` 提前 `return` 导致校验逻辑不可达及缺少 `#if WITH_EDITOR` 保护的问题。
+  2. **完善与修复 `UHealthComponent`**：修复 `BeginPlay` 中重复绑定两次 `OnTakeAnyDamage` 而漏绑 `OnTakePointDamage` 的问题；为 `FDamageTakenEvent` 补齐 `UPROPERTY(BlueprintReadOnly)` 与成员默认初始化（避免 `bIsHeadshot` 等栈内存脏值）；保留 `ApplyDamage(float)` 兼容入口。
+  3. **实现 `UHitFeedbackComponent` 并挂载**：完成服务端订阅 `OnDamageTaken`、高频集火节流（致命一击豁免）、1 字节 `HitFlags` 压缩 `NetMulticast(Unreliable)` 广播、四元数法线+偏移旋转、`ENCPoolMethod::AutoRelease` Niagara 池化与音效衰减/并发控制；已在 `AEnemyBase` 与 `ATPS_ShootCharacter` 构造函数中挂载该组件。
+  4. **文档同步**：同步更新 `Docs/01_Architecture.md`、`Docs/Specs/05_Hit_Feedback_System.md` 与本日志（本次仅改动 C++ 与 Markdown，未触碰任何 `.uasset` 避免与编辑器内特效制作冲突）。
+  5. **定制机甲受击特效（UE MCP）**：为玩家机甲制作 4 层科幻机甲程序化受击材质（`M_MechHit_Sparks` 钛金火星、`M_MechHit_ElectricArc` 蓝白短路电弧、`M_MechHit_CoreFlash` 能量闪光+扩散冲击环、`M_MechHit_ScorchSmoke` 金属焦烟）及两套 `LoopBehavior=Once` 自动回收 Niagara 系统（`NS_MechHitImpact` 与 `NS_MechHitOverload`），并已接入 `DA_PlayerHitFeedConfig`。
 
 ### 2026-11-25 — 旗舰项目定位确认与 GitHub 级跨 AI 文档初始化
 - **完成内容**：
