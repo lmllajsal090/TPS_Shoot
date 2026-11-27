@@ -1,6 +1,6 @@
 # Spec + TDD 05：受击反馈系统（Hit Feedback System）
 
-> **状态**：`[Implemented — C++ 已实现并验证，待编辑器配置 DataAsset 与双端 PIE 验收]`
+> **状态**：`[Implemented — 已完成 C++、机甲受击特效与配置接入]`
 > **所属阶段**：Phase 5 / 战斗反馈前置落地（覆盖玩家 `ATPS_ShootCharacter` 与敌人 `AEnemyBase`）
 > **架构决策**：采用「`UHealthComponent` 统一收口伤害上下文 + 独立 `UHitFeedbackComponent` + `UHitFeedbackConfig` DataAsset」分层解耦方案。
 

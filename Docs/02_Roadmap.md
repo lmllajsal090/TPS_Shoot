@@ -18,13 +18,13 @@
 > 详细设计见：[Docs/Specs/01_Extraction_Loop.md](Specs/01_Extraction_Loop.md)
 
 - [ ] **M2.1 对局阶段机与 GameState 同步**
-  - 新增 `ATPS_ShootGameState` 同步对局阶段（`Exploring` -> `ObjectiveSecured` -> `Extracting` -> `Extracted` / `Failed`）、目标持有人与撤离倒计时
-  - 完善 `ATPS_ShootGameMode`：全队阵亡判定、撤离成功结算、以及一键重开流程
-- [ ] **M2.2 核心高价值目标物：「非洲之星（Heart of Africa）」**
-  - `AExtractionObjectiveActor`：支持交互拾取（`ServerInteract` 校验距离与合法性）、持有状态同步、持有人阵亡自动在原地掉落可再次拾取
+  - 新增 `ATPS_ShootGameState`（继承 `AGameStateBase`）同步对局阶段（`Exploring` -> `CountdownActive` -> `Extracting` -> `Extracted` / `Failed`）、目标持有人与时间戳倒计时
+  - 完善 `ATPS_ShootGameMode`：全队阵亡/超时失败判定、撤离成功结算、断线掉落兜底与一键重开流程
+- [ ] **M2.2 核心高价值目标物：「以太之心（Aether Core）」**
+  - `AAetherCoreActor`：支持 `E` 键交互拾取（`ServerInteract` 原子校验防抢拾竞态）、拾取后触发全局倒计时、持有人阵亡/断线自动在原地贴地掉落
 - [ ] **M2.3 撤离点系统与极简撤离 UI**
-  - `AExtractionZone`：检测持宝/小队玩家进入撤离区 -> 启动服务端权威撤离倒计时（支持离开中断/暂停与重新进入）-> 倒计时归零结算胜利
-  - 极简 HUD 扩展：任务目标提示条 + 撤离倒计时进度条 + 胜利/失败结算弹窗
+  - `AExtractionZone`：校验持有人进入撤离区 -> 启动服务端权威撤离读条（可配置时长）-> 读条归零全队撤离胜利
+  - 极简 HUD 扩展：任务目标提示条 + 全局倒计时/撤离进度条 + 胜利/失败结算弹窗（v2 再加撤离期间敌人加强/增援）
 
 ---
 
@@ -63,10 +63,10 @@
   - 重构 `UCombatComponent::SwitchWeapon` 硬编码 `switch`，改为由武器配置驱动切枪 Montage 与时间节点
   - 新增 3 号槽位「小刀（Knife）」：近战扇形/胶囊挥砍判定 + **切刀跑图移速加成**（贴合三角洲跑图撤离手感）
 - [ ] **M5.2 极简高收益战斗反馈与续航**
-  - 受击反馈系统（`UHealthComponent` 统一伤害事件 + `UHitFeedbackComponent` + `UHitFeedbackConfig` DataAsset，覆盖玩家与敌人，见 [05_Hit_Feedback_System.md](Specs/05_Hit_Feedback_System.md)）
-  - 爆头部位伤害倍率（`Hit.BoneName`）+ **Hitmarker 准星命中/爆头/击杀反馈**
-  - 简易弹药/医疗补给拾取点（保证搜打撤全程续航不卡弹）
-  - 角色 3C 机动动作（视进度加冲刺 Sprint / 翻滚闪避 Dodge）
+  - [x] 受击反馈系统（`UHealthComponent` 统一伤害事件 + `UHitFeedbackComponent` + `UHitFeedbackConfig` DataAsset + 科幻机甲定制受击特效，见 [05_Hit_Feedback_System.md](Specs/05_Hit_Feedback_System.md)）
+  - [ ] 爆头部位伤害倍率（`Hit.BoneName`）+ **Hitmarker 准星命中/爆头/击杀反馈**
+  - [ ] 简易弹药/医疗补给拾取点（保证搜打撤全程续航不卡弹）
+  - [ ] 角色 3C 机动动作（视进度加冲刺 Sprint / 翻滚闪避 Dodge）
 - [ ] **M5.3 第一关动线包装与双端演示录屏**
   - 在关卡中明确布置：**出生点 -> 交火掩体区 -> 高价值藏宝点（非洲之星，近战+远程敌人守卫）-> 撤离点**
   - 完成双端联机实机录屏，整理 `README.md` 展示区

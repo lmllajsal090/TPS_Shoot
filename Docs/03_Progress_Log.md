@@ -7,14 +7,25 @@
 
 ## 当前状态与下一步（Next Session Entry Point）
 
-- **当前阶段**：受击反馈系统（Spec 05）C++ 层已完整落地，待在 UE 编辑器中配置 `DA_WhisperHitFeedback` / `DA_PlayerHitFeedback` 并做双端 PIE 验收
+- **当前阶段**：已完成受击反馈系统（Spec 05）与三区科幻搜打撤大地图拼装（`Maps/Lvl_SciFiExtraction`）；准备启动 **Phase 2「以太之心」搜打撤闭环 C++ 实现**（`Docs/Specs/01_Extraction_Loop.md`）
 - **下一步建议**：
-  1. 在 UE 编辑器中创建 `UHitFeedbackConfig` DataAsset（挂载 `BloodPack` Niagara 与音效），分别填入 `BP_Whisper` 与 `BP_TrooperPlayer_Polished` 的 `HitFeedbackComponent->FeedbackConfig`，并跑 2 Players Listen Server PIE 验收。
-  2. 决定下一阶段启动 **Phase 2（搜打撤闭环：非洲之星 + 撤离点）** 还是 **Phase 3（联机开火先行 + 弹道/带宽优化专项）**。
+  1. 在 UE 编辑器打开 `/Game/ThirdPerson/Maps/Lvl_SciFiExtraction`，跑一次 PIE 体验三区环线动线与光照（并可按需在编辑器里点一次 `Build -> Build Paths` 确认 NavMesh 烘焙显示）。
+  2. 按 **Mode A / Mode B** 落地 `ExtractionTypes.h` -> `ATPS_ShootGameState` -> `AAetherCoreActor` -> `AExtractionZone` -> `ATPS_ShootGameMode` 与 `ATPS_ShootCharacter::ServerInteract`，直接把「以太之心」放进东翼宝库底座、撤离点放进北翼撤离大厅！
 
 ---
 
 ## 变更日志（Changelog）
+
+### 2026-11-27 — 拼装三区环线科幻搜打撤大地图（`Maps/Lvl_SciFiExtraction`）
+- **完成内容**：
+  1. 以 `/Game/StarterBundle/ModularScifiHallways/Maps/SciFi_Example_E_Ext` 为蓝本（完全保留原地图与全部 C++ 代码不动），无头生成全新大地图 `/Game/ThirdPerson/Maps/Lvl_SciFiExtraction`。
+  2. **三区环线布局（~61m × 76m，约为原图 3.2 倍面积）**：
+     - `Sector_01_Entry`（出生与中枢区，保留原图观景窗经典起手构图）
+     - `Sector_02_AetherVault`（东翼 180° 无缝拼接，深处布置能量柱底座与冷青信标作为「以太之心」核心区）
+     - `Sector_03_ExtractionBay`（北翼无缝拼接，深处布置战术箱掩体与青绿信标作为撤离大厅）
+     - `Connector_WestSkyBridge`（西侧观景天桥连接 S0 与 S2，形成东西双通道战术环线）
+  3. **光照与性能一致性**：将 `PostProcessVolume2` 设为 `Unbound = True` 保持全图统一冷暖科幻光照氛围；全部 SpotLight / PointLight 统一设置 `MaxDrawDistance = 3200` / `MaxDistanceFadeRange = 800` 避免 UE 5.8 Lumen/VSM 远距过载。
+  4. **开箱即玩配置**：`WorldSettings` 覆写 `BP_ThirdPersonGameMode`、布置 2 个双人联机 `PlayerStart`、4 只分区域守卫的 `BP_Whisper`、13 处战术箱掩体及覆盖全图的 `NavMeshBoundsVolume`。
 
 ### 2026-11-26 — 受击反馈系统（Spec 05）C++ 实现、命名修正与 HealthComponent Bug 修复
 - **完成内容**：

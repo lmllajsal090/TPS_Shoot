@@ -74,7 +74,7 @@ AAEnemyAIController (Sight 感知 / NotifyDamagedBy 受击索敌 + 仇恨防抖)
 
 ## 5. 核心蓝图与内容资产索引（`Content/ThirdPerson/`）
 
-- **关卡**：`Lvl_ThirdPerson.umap`
+- **关卡**：`Lvl_ThirdPerson.umap`（原测试关卡）、`Maps/Lvl_SciFiExtraction.umap`（基于 `ModularScifiHallways` 拼装的三区环线科幻搜打撤大地图，含 6 枢纽/双通道环线/东翼以太之心宝库/北翼撤离大厅/全图 NavMesh）
 - **玩家与模式**：`BP_ThirdPersonGameMode`、`BP_ThirdPersonPlayerController`、`BP_TrooperPlayer_Polished`、`ABP_TPS_CoherentAimCalibration`
 - **敌人与 AI**：`BP_EnemyBase`、`BP_Whisper`、`ABP_EnemyBase`、`ABP_Whisper`、`AIC_EnemyController`、`BB_Enemy`、`BT_Enemy`、`BTS_UpdateTargetDistance`、`BTT_SetMoveSpeed`、`BTT_WhisperAttack`、`Data/DA_WhisperCombatConfig`
 - **UI**：`BP_TpsHUD`、`WBP_MainHUD`、`WBP_AimStar`、`WBP_Ammo`、`WBP_StateWidget`
