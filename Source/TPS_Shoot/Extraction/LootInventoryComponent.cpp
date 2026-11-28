@@ -72,12 +72,13 @@ void ULootInventoryComponent::RecalculateSummary()
 	
 	for (const FLootItemEntry& Entry : LootItems)
 	{
-		TotalLootValue+=Entry.Quantity*Entry.ItemData->BaseValue;
 		
 		if (!IsValid(Entry.ItemData) || Entry.Quantity <= 0)
 		{
 			continue;
 		}
+		
+		TotalLootValue+=Entry.Quantity*Entry.ItemData->BaseValue;
 		
 		if (Entry.ItemData->bIsAetherCore)
 		{
