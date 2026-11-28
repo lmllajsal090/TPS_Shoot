@@ -1,5 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 职责：敌人的 AI 控制入口，管理角色被 Possess 后的感知、行为树、黑板目标及死亡时的 AI 停止。
+ * 职责边界：决定行为与目标；具体动作执行交给 EnemyCombatComponent，不直接管理生命值或动画资源。
+ */
+
 #pragma once
 
 #include "CoreMinimal.h"

@@ -1,5 +1,12 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+/**
+ * 实现约定：
+ * - 输入及相机表现只在本地控制角色上处理；影响装备、生命和战斗的状态由权威端管理。
+ * - 本地瞄准表现与服务端复制状态分离，属性复制和权威端直接设置都需要对本地观察者提供通知。
+ * - 死亡时清理角色行为，并通过蓝图恢复非复制的表现组件与播放死亡表现。
+ */
+
 #include "TPS_ShootCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"

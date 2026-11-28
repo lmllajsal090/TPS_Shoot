@@ -1,5 +1,10 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+/**
+ * 职责：为本地玩家配置 Enhanced Input 映射及可选的触屏操作界面。
+ * 职责边界：不持有角色战斗或生命状态；具体输入响应由玩家角色及其组件处理。
+ */
+
 #pragma once
 
 #include "CoreMinimal.h"

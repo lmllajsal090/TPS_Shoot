@@ -1,5 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 实现约定：替换观察对象时先解除旧角色及生命组件的委托，再绑定新对象并立即读取当前状态，避免初始复制早于 UI 绑定导致显示缺失。
+ */
+
 #include "UI/UTPSMainHUD.h"
 
 #include "TPS_ShootCharacter.h"

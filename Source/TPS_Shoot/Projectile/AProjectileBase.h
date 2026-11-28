@@ -1,5 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 职责：游戏内投射物 Actor，管理移动、碰撞、生命周期及单次有效碰撞事件。
+ * 职责边界：不管理武器槽、弹药或输入；目标生命状态由其伤害处理链维护。
+ */
+
 #pragma once
 
 #include "CoreMinimal.h"

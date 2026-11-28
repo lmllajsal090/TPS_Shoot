@@ -1,5 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 职责：单把游戏武器的公共 Actor，封装武器自身配置、运行时弹药与换弹状态，并提供相关表现入口。
+ *
+ * 主要功能：
+ * - 管理武器自身的状态、定时器及网络复制。
+ * - 处理由 CombatComponent 转发的武器请求，并通知观察者状态变化。
+ * - 提供装备 Socket、动画 IK 数据及视听表现配置。
+ *
+ * 职责边界：不负责玩家输入、武器槽调度或 HUD 创建；目标生命状态由 HealthComponent 等伤害接收端管理。
+ */
+
 #pragma once
 
 #include "CoreMinimal.h"

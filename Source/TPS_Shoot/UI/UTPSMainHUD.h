@@ -1,5 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 职责：主 HUD 容器，组织弹药、准星和属性条 Widget，并将当前玩家的武器与生命值等数据源连接到对应子 Widget。
+ * 职责边界：负责初始化、观察和解除绑定，不修改武器或生命值状态，也不承担网络复制。
+ */
+
 #pragma once
 
 #include "CoreMinimal.h"

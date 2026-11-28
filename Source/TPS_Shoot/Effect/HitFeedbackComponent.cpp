@@ -1,5 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 实现约定：仅服务端监听伤害事件和执行频控；发送紧凑的事件数据，各端依据本地配置解析表现，独立服务器跳过视听播放。组件结束时解除旧数据源的委托。
+ */
+
 #include "Effect/HitFeedbackComponent.h"
 
 #include "Effect/HitFeedbackConfig.h"

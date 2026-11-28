@@ -1,5 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 实现约定：由权威端推进组件状态机，通过轮次标识约束异步回调、明确取消与完成的清理边界；蒙太奇通知仅负责各端表现，行为树不直接推进组件内部状态。
+ */
+
 #include "Combat/EnemyCombatComponent.h"
 
 #include "AIController.h"

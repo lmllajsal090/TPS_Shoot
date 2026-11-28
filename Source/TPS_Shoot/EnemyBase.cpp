@@ -1,5 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 实现约定：死亡通知可能由服务器本地状态或客户端复制结果触发，角色通过本地标记防止重复处理；权威端停止 AI 和战斗，各端负责自身移动、碰撞与蓝图死亡表现。
+ */
+
 
 #include "EnemyBase.h"
 

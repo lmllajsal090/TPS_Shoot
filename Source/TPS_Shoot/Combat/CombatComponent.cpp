@@ -1,5 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 实现约定：
+ * - 本地输入负责请求节奏；实际装备及武器状态由服务器决定。
+ * - 武器切换的隐藏、装备提交、完成分别由定时器推进；中断时清理待提交对象和所有相关定时器。
+ * - 具体武器行为由 WeaponBase 实现，本组件仅负责调度。
+ */
+
 
 #include "Combat/CombatComponent.h"
 #include "Engine/World.h"

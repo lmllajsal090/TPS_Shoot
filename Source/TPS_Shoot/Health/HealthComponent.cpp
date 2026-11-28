@@ -1,5 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 实现约定：点伤回调仅缓存同一次事件的命中上下文，由通用伤害回调统一更新生命值，避免重复扣减。先完成状态更新再广播；客户端通过复制回调通知本地监听者。
+ */
+
 
 #include "Health/HealthComponent.h"
 

@@ -1,5 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 实现约定：HUD 仅为本地控制器创建，绑定 Pawn 变化通知后立即初始化当前 Pawn；结束时先清空 Widget 的观察对象、解除委托，再移除界面。
+ */
+
 #include "UI/ATPSHUD.h"
 
 #include "GameFramework/PlayerController.h"

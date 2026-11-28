@@ -1,5 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 职责：通用属性条显示组件，保存当前值/最大值、计算百分比，并将目标百分比交给蓝图表现。
+ * 职责边界：不绑定 HealthComponent，不持有角色业务状态，也不负责网络复制。
+ */
+
 #pragma once
 
 #include "CoreMinimal.h"

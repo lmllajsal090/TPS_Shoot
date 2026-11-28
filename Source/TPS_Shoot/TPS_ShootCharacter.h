@@ -1,5 +1,16 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+/**
+ * 职责：玩家角色及其输入、移动、肩部相机、瞄准状态与武器装备入口。
+ *
+ * 主要功能：
+ * - 将本地输入转换为角色行为或 CombatComponent 请求。
+ * - 维护可复制的装备和瞄准状态，为本地 HUD 提供变化通知。
+ * - 装配生命、战斗与受击表现组件，处理死亡时的角色清理。
+ *
+ * 职责边界：连续射击和切换流程由 CombatComponent 调度，单把武器状态由 WeaponBase 管理；不负责具体 HUD 排版或伤害数值结算。
+ */
+
 #pragma once
 
 #include "CoreMinimal.h"

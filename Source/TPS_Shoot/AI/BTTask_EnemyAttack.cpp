@@ -1,5 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 实现约定：任务通过组件结果委托异步结束；每个行为树实例使用自己的 NodeMemory。中止时先解除委托再取消组件操作，避免完成回调重入行为树。
+ */
+
 #include "AI/BTTask_EnemyAttack.h"
 
 #include "AIController.h"

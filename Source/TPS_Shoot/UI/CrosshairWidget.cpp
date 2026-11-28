@@ -1,3 +1,7 @@
+/**
+ * 实现约定：缓存各准星元素原始平移，事件触发时增加显示偏移，NativeTick 只处理局部 UI 恢复，不向战斗系统轮询数据。
+ */
+
 #include "UI/CrosshairWidget.h"
 
 #include "Components/Image.h"

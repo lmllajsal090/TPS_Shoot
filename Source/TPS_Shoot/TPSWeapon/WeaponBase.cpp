@@ -1,5 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 实现约定：武器运行时状态在权威端维护，属性复制回调与权威端本地更新向观察者提供状态通知；视听效果与状态更新分离。换弹结束或取消时清理相关定时器。
+ */
+
 
 #include "TPSWeapon/WeaponBase.h"
 #include "Kismet/GameplayStatics.h"

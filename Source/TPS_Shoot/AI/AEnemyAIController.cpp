@@ -1,5 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 实现约定：在 Possess 时同步蓝图配置并启动行为树，感知更新及受击通知通过同一目标管理入口更新黑板。OnUnPossess / 死亡时解除感知监听并停止相关 AI 行为。
+ */
+
 
 #include "AI/AEnemyAIController.h"
 

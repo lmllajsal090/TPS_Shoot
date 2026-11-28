@@ -1,5 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 职责：协调玩家的武器装备与战斗流程。
+ *
+ * 主要功能：
+ * - 管理武器槽、切换的阶段状态和装备提交。
+ * - 调度本地射击请求与持续输入，转发服务器上的武器操作。
+ * - 暴露切换状态并处理定时器取消及组件结束时的清理。
+ *
+ * 职责边界：单把武器的弹药、换弹和具体操作由 WeaponBase 管理；角色负责输入与视角，UI 通过事件观察数据。
+ */
+
 #pragma once
 
 #include "CoreMinimal.h"

@@ -1,5 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 职责：角色生命状态的通用数据源，统一处理生命值初始化、伤害、治疗、死亡及状态复制。
+ *
+ * 主要功能：
+ * - 监听 UE 伤害事件，合并点伤信息并形成 FDamageTakenEvent。
+ * - 在权威端更新生命值，向本地监听者及客户端提供变化通知。
+ * - 广播受伤和死亡事件供表现层与宿主角色响应。
+ *
+ * 职责边界：不决定攻击如何发起，不直接播放特效或动画，不创建或更新 HUD。
+ */
+
 #pragma once
 
 #include "CoreMinimal.h"

@@ -1,5 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 职责：测试关卡中的简易可受伤目标，维护并复制自己的测试生命值。
+ * 职责边界：用于独立验证，不承担真实角色的 HealthComponent 或敌人 AI 职责。
+ */
+
 #pragma once
 
 #include "CoreMinimal.h"

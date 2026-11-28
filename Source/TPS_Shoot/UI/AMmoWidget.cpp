@@ -1,5 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 实现约定：切换观察武器时先解除旧状态委托，再绑定新武器并刷新一次；Widget 销毁时解除委托，避免旧武器继续刷新界面。
+ */
+
 
 #include "AmmoWidget.h"
 #include "Components/TextBlock.h"

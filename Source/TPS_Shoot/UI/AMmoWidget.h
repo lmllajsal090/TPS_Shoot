@@ -1,5 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 职责：观察当前武器的状态变化，展示弹药、备弹和换弹提示；切换数据源时解除旧委托。
+ * 职责边界：只读展示武器状态，不修改弹药或发起武器操作。
+ */
+
 #pragma once
 
 #include "CoreMinimal.h"

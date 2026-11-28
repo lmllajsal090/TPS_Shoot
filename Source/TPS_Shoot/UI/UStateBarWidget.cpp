@@ -1,5 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+/**
+ * 实现约定：对输入值和百分比做边界处理，首次有效数据或无效最大值立即刷新。后续变化由 BlueprintNativeEvent 决定是否使用插值，默认实现直接更新进度条。
+ */
+
 
 #include "UI/UStateBarWidget.h"
 
